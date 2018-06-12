@@ -1,8 +1,7 @@
 EIT v0.0.0
 ====
 
-<img src="overview1.png" width="480"><img src="overview2.png" width="480">
-
+<img src="overview.PNG" width="480">
 ## Overview
 
 This project is for viewing, editing, and converting 3D models using OpenGL.
