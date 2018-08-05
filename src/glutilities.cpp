@@ -12,10 +12,12 @@ namespace EITS
 		this->shininess = 0;
 		this->illum=4;
 	}
+
 	void Material::enable()
 	{
 		glEnable( GL_LIGHTING );
 	}
+
 	void Material::set()
 	{
 		glColor4fv(color.X);
@@ -25,6 +27,7 @@ namespace EITS
 		if(illum>3)glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &shininess);
 		if(illum>4)glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission.X);
 	}
+
 	void Material::disable()
 	{
 		glDisable( GL_LIGHTING );
@@ -36,17 +39,20 @@ namespace EITS
 	{
 
 	}
+
 	Light::~Light()
 	{
 	}
+
 	void Light::init()
 	{
-		isOn=true;
-		position = Vector4f( 0.0, 1000.0, 1000.0, 1.0 );
-		ambient = Vector4f( 0.2, 0.2, 0.2, 1.0 );
-		diffuse = Vector4f( 1, 1, 1, 1.0 );
-		specular = Vector4f( 0.0, 0.0, 0.0, 1.0 );
+		is_on=true;
+		position = Vector4f( 0.0f, 1000.0f, 1000.0f, 1.0f);
+		ambient = Vector4f( 0.2f, 0.2f, 0.2f, 1.0f );
+		diffuse = Vector4f( 1.0f, 1.0f, 1.0f, 1.0f );
+		specular = Vector4f( 0.0f, 0.0f, 0.0f, 1.0f );
 	}
+
 	void Light::set()
 	{
 		glLightfv( GL_LIGHT0+id, GL_POSITION, position.X);
@@ -56,7 +62,7 @@ namespace EITS
 	}
 	void Light::enable()
 	{
-		if(this->isOn)
+		if(this->is_on)
 			glEnable( GL_LIGHT0+id );
 		else
 			glDisable( GL_LIGHT0+id );
@@ -69,30 +75,30 @@ namespace EITS
 
 	MouseButton::MouseButton()
 	{
-		Reset();
+		reset();
 	}
 
 	MouseButton::~MouseButton()
 	{
 	}
 
-	void MouseButton::Reset()
+	void MouseButton::reset()
 	{
 		before=Vector2f(0,0);
 		current=Vector2f(0,0);
 		after=Vector2f(0,0);
-		state=None;
+		state=MOUSE_NONE;
 	}
 
-	void MouseButton::Update()
+	void MouseButton::update()
 	{
-		state=Release;
+		state= MOUSE_RELEASE;
 		after=current;
 	}
 
 	MouseSelection::MouseSelection()
 	{
-		this->isDrawSelectRegion=false;
+		this->is_draw_select_region=false;
 	}
 
 	MouseSelection::~MouseSelection()
@@ -102,7 +108,7 @@ namespace EITS
 
 	void MouseSelection::render()
 	{
-		if(!this->isDrawSelectRegion)
+		if(!this->is_draw_select_region)
 			return;
 		glDisable(GL_LIGHTING);
 		glDisable(GL_DEPTH_TEST);
@@ -111,10 +117,10 @@ namespace EITS
 		glColor3d(0.3, 0.3, 0.3);
 		glPushMatrix();
 		glBegin(GL_LINE_LOOP);
-		glVertex3d(this->leftTop.x,this->leftTop.y,0);
-		glVertex3d(this->leftTop.x,this->rightBottom.y,0);
-		glVertex3d(this->rightBottom.x,this->rightBottom.y,0);
-		glVertex3d(this->rightBottom.x,this->leftTop.y,0);
+		glVertex3d(this->left_top.x,this->left_top.y,0);
+		glVertex3d(this->left_top.x,this->right_bottom.y,0);
+		glVertex3d(this->right_bottom.x,this->right_bottom.y,0);
+		glVertex3d(this->right_bottom.x,this->left_top.y,0);
 		glEnd();
 		glPopMatrix();
 		glDisable(GL_LINE_STIPPLE);
@@ -131,23 +137,23 @@ namespace EITS
 	{
 	}
 
-	void Camera::init(int _cameraModel)
+	void Camera::init(int _model)
 	{
-		cameraModel=_cameraModel;
+		model=_model;
 		rmlReset();
-		if(cameraModel==CAM_PERSP){
+		if(model==CAM_PERSP){
 			zoom = VC_INIT_ZOOM * 2;
-			angle =Vector3d(M_PI/180*45,M_PI/180*45,0);
+			angle =Vector3d(M_PI/180*45, M_PI/180*45, 0);
 		}
-		else if(cameraModel==CAM_FRONT){
+		else if(model==CAM_FRONT){
 			zoom = VC_INIT_ZOOM * 0.5;
 			angle =Vector3d(0,0,0);
 		}
-		else if(cameraModel==CAM_SIDE){
+		else if(model==CAM_SIDE){
 			zoom = VC_INIT_ZOOM * 0.5;
 			angle =Vector3d(0,M_PI/180*90,0);
 		}
-		else if(cameraModel==CAM_TOP){
+		else if(model==CAM_TOP){
 			zoom = VC_INIT_ZOOM * 0.5;
 			angle =Vector3d(M_PI/180*90,0,0);
 		}else{
@@ -166,11 +172,11 @@ namespace EITS
 	{
 		if(ml&&_button==GLUT_LEFT_BUTTON){
 			rml[2].before = _position;
-			rml[2].state = Push;
+			rml[2].state = MOUSE_PUSH;
 		}
 		else if(mm&&_button==GLUT_MIDDLE_BUTTON){
 			rml[1].before = _position;
-			rml[1].state = Push;
+			rml[1].state = MOUSE_PUSH;
 		}
 //		else if(mr&&_button==GLUT_RIGHT_BUTTON){
 //			rml[0].before = _position;
@@ -181,16 +187,16 @@ namespace EITS
 	void Camera::MouseMotion(Vector2f _position, bool ml, bool mm, bool mr)
 	{
 
-		if ( ml&&rml[0].state == Push ){
+		if ( ml&&rml[0].state == MOUSE_PUSH ){
 				rml[0].current = _position -rml[0].before + rml[0].after;
 				zoom = VC_INIT_ZOOM+(rml[0].current.y+rml[0].current.x)*0.01;
 		}
-		if ( ml&&rml[1].state == Push ){
+		if ( ml&&rml[1].state == MOUSE_PUSH ){
 			rml[1].current= _position -rml[1].before + rml[1].after;
 			trans.x = rml[1].current.x * 0.01;
 			trans.y = -rml[1].current.y * 0.01;
 		}
-		if ( mr&& rml[2].state == Push ){
+		if ( mr&& rml[2].state == MOUSE_PUSH ){
 			angle.x+=M_PI/180*(rml[2].before.x - _position.x)*0.5;
 			angle.y-=M_PI/180*(rml[2].before.y - _position.y)*0.5;
 			if ( angle.y >= 2*M_PI )  angle.y -= 2*M_PI;
@@ -201,15 +207,15 @@ namespace EITS
 	}
 	void Camera::rmlReset()
 	{
-		rml[0].Reset();
-		rml[1].Reset();
-		rml[2].Reset();
+		rml[0].reset();
+		rml[1].reset();
+		rml[2].reset();
 	}
 	void Camera::rmlUpdate()
 	{
-		rml[0].Update();
-		rml[1].Update();
-		rml[2].Update();
+		rml[0].update();
+		rml[1].update();
+		rml[2].update();
 	}
 	void Camera::update()
 	{
@@ -219,36 +225,36 @@ namespace EITS
 		if( angle.y > Deg2Rad(90.0)  &&  angle.y <= Deg2Rad(270.0) ) upvector.y = -1.0;
 		else upvector.y = 1.0;
 	}
-	void Camera::attach(Vector2d _size, bool _isScale)
+	void Camera::attach(Vector2d _size, bool _is_scale)
 	{
-		if(cameraModel==CAM_PERSP){
+		if(model==CAM_PERSP){
 			this->resizePersp(_size);
 			glMatrixMode( GL_MODELVIEW );
 			Ttran.setTranslate(Vector3d(trans.x, trans.y, trans.z));
-			this->setModelViewMatrix(_isScale);
+			this->setModelViewMatrix(_is_scale);
 			glLoadMatrixd((Ttran*Trot).getTr4GL());
 		}
 		else{
-			this->resizeOrtho(_size, _isScale);
+			this->resizeOrtho(_size, _is_scale);
 			glMatrixMode( GL_MODELVIEW );
 			Ttran.setTranslate(Vector3d(trans.x, trans.y, trans.z));
-			this->setModelViewMatrix(_isScale);
+			this->setModelViewMatrix(_is_scale);
 			glLoadMatrixd((Ttran*Trot).getTr4GL());
 		}
 	}
-	void Camera::attachRotMat(bool _isScale)
+	void Camera::attachRotMat(bool _is_scale)
 	{
-		setModelViewMatrix(_isScale);
+		setModelViewMatrix(_is_scale);
 		glLoadMatrixd(this->Trot.getTr4GL());
 	}
-	void Camera::attachTransMat(bool _isFix)
+	void Camera::attachTransMat(bool _is_fix)
 	{
-		if(!_isFix)
+		if(!_is_fix)
 			Ttran.setTranslate(Vector3d(trans.x, trans.y, trans.z));
 		glLoadMatrixd(this->Ttran.getTr4GL());
 	}
 
-	void Camera::setModelViewMatrix(bool _isScale)
+	void Camera::setModelViewMatrix(bool _is_scale)
 	{
 		Vector3d forward;
 		Vector3d side;
@@ -264,7 +270,7 @@ namespace EITS
 		transferMatrixd tTrot;
 		transferMatrixd tTtran;
 		tTrot.setRotMatrix(side,up,-forward);
-		if(_isScale)
+		if(_is_scale)
 			tTtran.setTranslate(-position);
 		else
 			tTtran.setTranslate(-VC_DEFAULT_ZOOM*position/position.abs());
@@ -272,95 +278,95 @@ namespace EITS
 		this->Trot=tTrot*tTtran;
 	}
 
-	void Camera::resizeOrtho(Vector2d _size, bool _isScale)
+	void Camera::resizeOrtho(Vector2d _size, bool _is_scale)
 	{
-		glViewport( 0, 0, _size.x, _size.y );
+		glViewport( 0, 0, (int)_size.x, (int)_size.y );
 		glMatrixMode(GL_PROJECTION );
 		glLoadMatrixd(this->Tproj.getTr4GL());
 		if(_size.y!=0){
-			if(_isScale)
+			if(_is_scale)
 				glOrtho(-zoom*_size.x/_size.y, zoom*_size.x/_size.y, -zoom , zoom, 0.1, 1000);
 			else glOrtho(-VC_DEFAULT_ZOOM*_size.x/_size.y, VC_DEFAULT_ZOOM*_size.x/_size.y, -VC_DEFAULT_ZOOM , VC_DEFAULT_ZOOM, 0.1, 1000);
 		}
 	}
 	void Camera::resizePersp(Vector2d _size)
 	{
-		glViewport( 0, 0, _size.x, _size.y );
+		glViewport( 0, 0, (int)_size.x, (int)_size.y );
 		glMatrixMode(GL_PROJECTION );
 		glLoadMatrixd(this->Tproj.getTr4GL());
 		gluPerspective(50, _size.x/_size.y, 0.01, 1000 );
 		glMatrixMode( GL_MODELVIEW );
 	}
 
-	void glutSolidRectangle(Vector3d _size, bool _isVertShade)
+	void glutSolidRectangle(Vector3d _size, bool _is_vert_shade)
 	{
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d(0,0, 1).X);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1, 1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1, 1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1, 1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1, 1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0, _size.z/2.0);
 		glEnd();
 
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d(0,0,-1).X);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1,-1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1,-1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1,-1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1,-1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0,-_size.z/2.0);
 		glEnd();
 
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d(-1,0,0).X);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1, 1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1,-1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1,-1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1, 1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0, _size.z/2.0);
 		glEnd();
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d( 1,0,0).X);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1, 1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1, 1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1,-1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1,-1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0,-_size.z/2.0);
 		glEnd();
 
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d(0,-1,0).X);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1, 1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1, 1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1,-1,-1).X);
 		glVertex3d(-_size.x/2.0,-_size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1,-1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1,-1,-1).X);
 		glVertex3d( _size.x/2.0,-_size.y/2.0,-_size.z/2.0);
 		glEnd();
 		glBegin(GL_POLYGON);
 		glNormal3dv(Vector3d(0, 1,0).X);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1, 1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0, _size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d( 1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d( 1, 1,-1).X);
 		glVertex3d( _size.x/2.0, _size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1,-1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1,-1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0,-_size.z/2.0);
-		if(_isVertShade)glNormal3dv(Vector3d(-1, 1, 1).X);
+		if(_is_vert_shade)glNormal3dv(Vector3d(-1, 1, 1).X);
 		glVertex3d(-_size.x/2.0, _size.y/2.0, _size.z/2.0);
 		glEnd();
 
@@ -452,21 +458,21 @@ namespace EITS
 		glEnd();
 	}
 
-	void glutGridGround(double _size, int _numGrid)
+	void glutGridGround(double _size, int _num_grid)
 	{
 		glDisable(GL_LIGHTING);
 		glEnable(GL_DEPTH_TEST);
 		glColor3d(0.0, 0.0, 0.0);
-		for(int i=-_numGrid;i<=_numGrid;i++){
+		for(int i=-_num_grid;i<=_num_grid;i++){
 			if(i==0)glLineWidth(3);
 			else 	glLineWidth(1);
 			glBegin(GL_LINES);
-			glVertex3d(-_size, 0, i*_size/_numGrid);
-			glVertex3d( _size, 0, i*_size/_numGrid);
+			glVertex3d(-_size, 0, i*_size/_num_grid);
+			glVertex3d( _size, 0, i*_size/_num_grid);
 			glEnd();
 			glBegin(GL_LINES);
-			glVertex3d(i*_size/_numGrid, 0, -_size);
-			glVertex3d(i*_size/_numGrid, 0, _size);
+			glVertex3d(i*_size/_num_grid, 0, -_size);
+			glVertex3d(i*_size/_num_grid, 0, _size);
 			glEnd();
 		}
 		glEnable(GL_LIGHTING);

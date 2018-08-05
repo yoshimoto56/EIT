@@ -3,16 +3,16 @@
 namespace EITS
 {
 
-	char * GetDirectoryName(const char *filename, char *dest)
+	char * getDirectoryName(const char *filename, char *dest)
 	{
 		char *strings = NULL;
 		char *dir;
 		dir = new char [strlen(filename)+1];
-		strcpy(dir, filename);
+		strcpy_s(dir, sizeof(dir), filename);
 		if ( strings = strrchr(dir, '/' ) ) strings[1] = '\0';
 		else if ( strings = strrchr(dir, '\\') ) strings[1] ='\0';
 		else dir[0] = '\0';
-		strcpy(dest, dir);
+		strcpy_s(dest, sizeof(dest), dir);
 		return dest;
 	}
 	bool ObjMesh::loadOBJFile(const char *filename)
@@ -27,7 +27,7 @@ namespace EITS
 		char buf[256];
 		char *pbuf;
 		Vector3d tp;
-		strcpy_s(objFileName, filename);
+		strcpy_s(filename_obj, filename);
 		file.open(filename, std::ios::in);
 		if ( !file.is_open() ){
 	//		std::cout << "[FAIL]" << std::endl;
@@ -44,7 +44,7 @@ namespace EITS
 			else if(strstr(buf, "f "))this->num_facet++;
 			else if(strstr(buf, "mtllib ")){
 				sscanf_s(buf, "mtllib %s", &tmp_char, 256);
-				sprintf_s(buf,"%s%s", directoryName, tmp_char);
+				sprintf_s(buf,"%s%s", directoryname, tmp_char);
 				if ( !loadMTLFile(buf))
 					return false;
 			}
@@ -78,6 +78,7 @@ namespace EITS
 			else if(strstr(buf, "f ")){
 				cfi++;
 				pbuf = buf;
+				this->facet[cfi].num_node = 0;
 				while ( *pbuf ){
 					if ( *pbuf == ' ' ) this->facet[cfi].num_node++;
 					pbuf++;
@@ -104,22 +105,22 @@ namespace EITS
 						if ( sscanf_s(pbuf, "%d//%d", &this->facet[cfi].index_node[i], &this->facet[cfi].index_normal[i] ) != 2 ){
 							if ( sscanf_s(pbuf, "%d/%d", &this->facet[cfi].index_node[i], &tmp_int ) != 2 ){
 								sscanf_s(pbuf, "%d", &this->facet[cfi].index_node[i]);
-								this->facet[cfi].normalType = NORMAL_NONE;
+								this->facet[cfi].normal_type = NORMAL_NONE;
 							}
 							else{
-								this->facet[cfi].normalType = NORMAL_NONE;
+								this->facet[cfi].normal_type = NORMAL_NONE;
 							}
 						}
 						else{
-							this->facet[cfi].normalType = NORMAL_Facet;
+							this->facet[cfi].normal_type = NORMAL_FACET;
 						}
 					}
 					else{
-						this->facet[cfi].normalType = NORMAL_POINT;
+						this->facet[cfi].normal_type = NORMAL_POINT;
 					}
 					this->facet[cfi].index_node[i]--;
 					this->facet[cfi].index_facet = cfi;
-					if ( this->facet[cfi].normalType!=NORMAL_NONE )
+					if ( this->facet[cfi].normal_type!=NORMAL_NONE )
 						this->facet[cfi].index_normal[i]--;
 				}
 				this->facet[cfi].index_material = cmi;
@@ -144,7 +145,7 @@ namespace EITS
 		float tmp_float=0.0f;
 		Vector3f temp;
 		Material _mat;
-		strcpy_s(mtlFileName, filename); 
+		strcpy_s(filename_mtl, filename); 
 		file.open(filename, std::ios::in);
 		if ( !file.is_open() )
 		{
@@ -218,7 +219,7 @@ namespace EITS
 	bool ObjMesh::load(const char *_filename)
 	{
 		std::cout <<"Loading .obj data ...";
-		GetDirectoryName(_filename, directoryName);
+		getDirectoryName(_filename, directoryname);
 		if ( !loadOBJFile(_filename) ){
 			std::cout <<"[FAIL]"<< std::endl;
 			return false;

@@ -36,26 +36,30 @@ namespace EITS
 		{
 		public:
 			int neibor[27];
-			bool isSurface;
-			bool isFreeSpace;
+			bool is_surface;
+			bool is_free_space;
 			int label;
-			int labelindex;
+			int label_index;
 			Vector3d color;
 			Vector3d center;
 			Voxel &operator=(const Voxel &parent){
 				label=parent.label;
-				labelindex=parent.labelindex;
+				label_index=parent.label_index;
 				color=parent.color;
 				center=parent.center;
-				isSurface=parent.isSurface;
-				isFreeSpace=parent.isFreeSpace;
-				for(int i=0;i<27;i++)neibor[i]=parent.neibor[i];
+				is_surface=parent.is_surface;
+				is_free_space=parent.is_free_space;
+				memcpy(neibor, parent.neibor, sizeof(int)*27);
 				return(*this);
 			}
 			Voxel(){
-				label=-1;center=Vector3d(0,0,0); color=Vector3d(0,0,0); isSurface=false; isFreeSpace=false;
-				labelindex=-1;
-				for(int i=0;i<27;i++)neibor[i]=false;
+				label=-1;
+				center=Vector3d(0,0,0); 
+				color=Vector3d(0,0,0); 
+				is_surface=false; 
+				is_free_space=false;
+				label_index=-1;
+				memset(neibor, -1, sizeof(int) * 27);
 			}
 			~Voxel(){}
 		}***data;
@@ -63,18 +67,18 @@ namespace EITS
 
 		Material mat;
 		bool is_loaded;
-		bool is_viewData;
-		bool isDrawWireFrame;
-		bool is_viewSlice;
+		bool is_view_data;
+		bool is_draw_wire_frame;
+		bool is_view_slice;
 		bool is_auto_scale;
-		bool isMilling;
-		int curStimMap;
-		int numVoxel;
-		int mapDepth;
+		bool is_milling;
+		bool is_affine;
+		int num_voxel;
+		int map_depth;
 		int width;
 		int height;
 		int depth;
-		int freeLabel;
+		int free_label;
 		double scale;
 		Vector3d size;
 		Vector3d center;
@@ -82,9 +86,8 @@ namespace EITS
 		unsigned char *pixels;
 		unsigned char *buffer;
 		IMG *slice;
-		Vector3i slicePos;
-		GLuint texName[3];
-
+		Vector3i slice_pos;
+		GLuint name[3];
 
 		//モデル-ボクセル変換行列の計算
 		void calModel2Voxel();
@@ -113,23 +116,23 @@ namespace EITS
 		void setVoxelSameNum(int _sizeVoxel);
 		void setVoxelValue(int x, int y, int z, double _val){
 			data[x][y][z].color=Vector3d(0,0,1);
-			data[x][y][z].isSurface=true;}
+			data[x][y][z].is_surface=true;}
 		void setVoxelColor(int x, int y, int z, Vector3d _color){
 			data[x][y][z].color=_color;
-			data[x][y][z].isSurface=true;}
+			data[x][y][z].is_surface=true;}
 		void setVoxelValue(int _index, double _val){
 			int x,y,z;
 			z=_index%depth;
 			y=(int)(_index/depth)%height;
 			x=(int)(_index/depth)/height;
 			data[x][y][z].color=Vector3d(0,0,1);
-			data[x][y][z].isSurface=true;}
+			data[x][y][z].is_surface=true;}
 
 		Vector3d getSize(){return size;}
 		int getWidth(){return width;}
 		int getHeight(){return height;}
 		int getDepth(){return depth;}
-		int getNumVoxel(){return numVoxel;}
+		int getNumVoxel(){return num_voxel;}
 		Vector3d getCenter(int x, int y, int z){return data[x][y][z].center;}
 		Vector3d getCenter(int _index){
 			int x,y,z;
@@ -147,7 +150,7 @@ namespace EITS
 		int getIndexOfVoxelAt(Vector3d _Puni, int _coordinate=COORD_WORLD);
 		void deleteVoxel();
 		void newVoxel();
-		void render(bool _isScaled=true);
+		void render(bool _is_scaled=true);
 		void renderGuid();
 		void clear();
 		bool getIsLoaded(){return this->is_loaded;}
@@ -157,19 +160,19 @@ namespace EITS
 		Vector3d getCenter(){return this->center;}
 		void setLength(double _length){this->length=_length;}
 		double getLength(){return length;}
-		void setIsDrawWireFrame(bool _isDrawWireFrame){this->isDrawWireFrame=_isDrawWireFrame;}
+		void setIsDrawWireFrame(bool _is_draw_wire_frame){this->is_draw_wire_frame=_is_draw_wire_frame;}
 		void setIsLoaded(bool _is_loaded){this->is_loaded = _is_loaded;}
 		//描画モードの設定
-		void setIsViewData(bool _is_viewData){this->is_viewData=_is_viewData;}
-		void setIsViewSlice(bool _is_viewSlice){this->is_viewSlice=_is_viewSlice;}
-		void setIsAffine(bool _is_auto_scale){this->is_auto_scale=_is_auto_scale;}
-		bool getIsAffine(){return this->is_auto_scale;}
+		void setIsViewData(bool _is_view_data){this->is_view_data=_is_view_data;}
+		void setIsViewSlice(bool _is_view_slice){this->is_view_slice=_is_view_slice;}
+		void setIsAutoScale(bool _is_auto_scale){this->is_auto_scale=_is_auto_scale;}
+		bool getIsAutoScale(){return this->is_auto_scale;}
 
 		Vector3d getColorAt(int _width, int _height ,int _depth);
 		Vector3d getColorAt(int _index);
 		int getLabelIndexAt(int _index);
 		void setFreeSpaceAt(int _index);
-		void setSlicePos(Vector3i _slicePos){this->slicePos=_slicePos;}
+		void setSlicePos(Vector3i _slice_pos){this->slice_pos=_slice_pos;}
 		void setSliceSize(int _size);
 		void setSlice(bool _invert = false);
 		void renderGrid();
@@ -185,24 +188,24 @@ namespace EITS
 		int setNeiborColorWith(Vector3d _tColor, Vector3d _nColor, Vector3d _cColor=Vector3d(0,0,0));
 		//点で挟む領域（注意：_point1は物体の内部に設定しなければならない）
 		void setLabelBetween(Vector3d _point1, Vector3d _point2, Vector3d _color, int _label);
-		//ラベリングを行う
-		void labeling();
 		//ラベルをセットする
 		int setLabel();
 		//連結空間を特定の色で塗りつぶす
 		void setColorMap(int _num);
 		//特定のボクセルの色と同じボクセルをすべて指定した色で塗り替える
-		void resetColorAt(int _index=0, Vector3d _color=Vector3d(0,0,0), bool _isFreeSpace=true);
+		void resetColorAt(int _index=0, Vector3d _color=Vector3d(0,0,0), bool _is_free_space=true);
 		//特定のボクセルの色以外のボクセルをSurfaceと内部にわけて塗りかえる
 		void resetColorSurfAndInExceptAt(int _index, Vector3d _sColor, Vector3d _iColor);
 		//物体の内部にグラデーションマップを生成する
 		void setGradMapWithinSurf();
+		//物体の内部を表面と同じ色で塗りつぶす
+		void setColorWithinSurf();
 
 		//特定のindexにおけるSurfaceボクセルを削り、Surfaceを設定し直す
 		bool millingSurfaceWith(int _index);
 		bool coloringSurfaceWith(int _index, Vector3d _col);
 		//これは単に特定の位置におけるボクセルを自由空間にするMethod
-		void millingVoxels(Vector3d _Pworld);
+//		void millingVoxels(Vector3d _Pworld);
 
 	};
 };

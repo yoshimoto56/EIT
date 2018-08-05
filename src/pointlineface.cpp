@@ -9,6 +9,7 @@ namespace EITS
 		dst=_normal*(_point-_coord)/_normal.abs();
 		return dst;
 	}
+
 	double getPointLineDistance(Vector3d _point, Vector3d _dir, Vector3d _coord)
 	{
 		double dst;
@@ -24,10 +25,12 @@ namespace EITS
 		dst=_point+_lNormal*t;
 		return dst;
 	}
+
 	Vector3d getFacePointProjection(Vector3d _point,  Vector3d _normal, Vector3d _coord)
 	{
 		return getFacePointProjection(_point,_normal,_normal,_coord);
 	}
+
 	Vector3d getIntersectPointFace(Vector3d *_point, Vector3d _normal, Vector3d _coord)
 	{
 		Vector3d dst;
@@ -38,14 +41,16 @@ namespace EITS
 		dst=_point[0]+dir*t;
 		return dst;
 	}
-	bool is_view_nodeWithinTriangle(Vector3d _point, Vector3d _normal, Vector3d _coord)
+
+	bool isViewNodeWithinTriangle(Vector3d _point, Vector3d _normal, Vector3d _coord)
 	{
 		double dst;
 		dst=getFacePointDistance(_point,_normal,_coord);
 		if(dst<0)return true;
 		return false;
 	}
-	bool is_view_nodeOnTriangle(Vector3d _point, Vector3d _normal, Vector3d *_coord)
+
+	bool isViewNodeOnTriangle(Vector3d _point, Vector3d _normal, Vector3d *_coord)
 	{
 		Vector3d c1,c2,c3;
 		Vector3d u, v, w;
@@ -59,7 +64,7 @@ namespace EITS
 		if(u*w<0.0)return false;
 		return true;
 	}
-	bool is_view_nodesSandFace(Vector3d *_point, Vector3d _normal, Vector3d _coord)
+	bool isViewNodesSandFace(Vector3d *_point, Vector3d _normal, Vector3d _coord)
 	{
 		double dst1;
 		double dst2;
@@ -68,6 +73,7 @@ namespace EITS
 		if(dst1*dst2>0)return false;
 		return true;
 	}
+
 	bool isFacesSandPoint(Vector3d _coord1, Vector3d _coord2, Vector3d _point)
 	{
 		Vector3d tnormal = (_coord1-_coord2)/(_coord1-_coord2).abs();
@@ -75,6 +81,7 @@ namespace EITS
 			return true;
 		return false;
 	}
+
 	bool isIntersectLineTriangle(Vector3d *_point, Vector3d *_coord, Vector3d *_intersection)
 	{
 		double det;
@@ -118,10 +125,11 @@ namespace EITS
 		_intersection->z=v;
 		return true;
 	}
+
 	bool isProjectedPointOnTriangle(Vector3d _point, Vector3d _normal, Vector3d *_coord)
 	{
 		double t=getFacePointDistance(_point,_normal,_coord[0]);
-		return is_view_nodeOnTriangle(_point-t*_normal/_normal.abs(),_normal,_coord);
+		return isViewNodeOnTriangle(_point-t*_normal/_normal.abs(),_normal,_coord);
 	}
 
 	Vector3d getProjectedPointOnTriangle(Vector3d _point, Vector3d _normal, Vector3d _coord)
@@ -129,22 +137,24 @@ namespace EITS
 		double t=getFacePointDistance(_point,_normal,_coord);
 		return _point-t*_normal/_normal.abs();
 	}
-	bool is_view_nodeOnFiniteFace(Vector3d _point, Facet *_facet)
+
+	bool isViewNodeOnFiniteFace(Vector3d _point, Facet *_facet)
 	{
 		Vector3d tCoord[3];
 		for(int j=0;j<_facet->num_node-2;j++){
 			tCoord[0]=_facet->vertex[0];
 			tCoord[1]=_facet->vertex[j+1];
 			tCoord[2]=_facet->vertex[j+2];
-			if(is_view_nodeOnTriangle(_point, _facet->normal[0], tCoord))
+			if(isViewNodeOnTriangle(_point, _facet->normal[0], tCoord))
 				return true;
 		}
 		return false;
 	}
+
 	bool isProjectedPointOnFiniteFace(Vector3d _point, Facet *_facet)
 	{
 		Vector3d pPoint;
 		pPoint=getFacePointProjection(_point, _facet->normal[0], _facet->normal[0], _facet->vertex[0]);	
-		return is_view_nodeOnFiniteFace(pPoint,_facet);
+		return isViewNodeOnFiniteFace(pPoint,_facet);
 	}
 }

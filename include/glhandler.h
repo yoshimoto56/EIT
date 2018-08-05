@@ -1,6 +1,8 @@
 #pragma once
-#define MAX_LIGHT_NUM 9
-#define MAX_CAMERA_NUM 9
+#define NUM_LIGHT_MAX 9
+#define NUM_CAMERA_MAX 9
+#define NUM_CAMERA_DEFAULT 5
+#define NUM_LIGHT_DEFAULT 3
 #define GL_REAL_VIRTUAL_SCALE 0.1
 #define GL_VIRTUAL_REAL_SCALE 10.0
 #define GL_CAMERA_INIPOS Vector3d(35,15,0)
@@ -10,7 +12,6 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-//#include <GL/glut.h>
 #include <GL/freeglut.h>
 #include <utilities.h>
 #include <glutilities.h>
@@ -36,19 +37,19 @@ namespace EITS{
 		static Window window;
 
 		static MouseSelection select;
-		static Vector3d posClicked;
+		static Vector3d pos_clicked;
 		static int key;
 
-		static int cameraMode;
+		static int camera_mode;
 		static Camera *camera;
-		static int numCamera;
+		static int num_camera;
 
 		static Light *light;
-		static int numLight;
+		static int num_light;
 
 		static utilities dt; 
-		static bool isRun;
-		static bool is_viewGrid;
+		static bool is_run;
+		static bool is_view_grid;
 
 		static double returnDepth(int,int);
 		static Vector3d returnCameraCo(Vector3d);
@@ -64,23 +65,23 @@ namespace EITS{
 
 		void init(int *_argc, char **_argv);
 
-		void setIsRun(bool _isRun){this->isRun=_isRun;}
-		bool getIsRun(){return isRun;}
-		void setis_viewGrid(bool _is_viewGrid){this->is_viewGrid=_is_viewGrid;}
-		bool getis_viewGrid(){return this->is_viewGrid;}
+		void setIsRun(bool _is_run){this->is_run=_is_run;}
+		bool getIsRun(){return is_run;}
+		void setIsViewGrid(bool _is_view_grid){this->is_view_grid=_is_view_grid;}
+		bool getIsViewGrid(){return this->is_view_grid;}
 
 		void setKey(int _key){this->key=_key;}
 		int getKey(){return key;}
-		Vector3d getPosClicked(){return posClicked;}
+		Vector3d getPosClicked(){return pos_clicked;}
 
-		void setNumLight(int _numLight){this->numLight=_numLight;}
-		int getNumLight(){return numLight;}
+		void setNumLight(int _num_light){this->num_light=_num_light;}
+		int getNumLight(){return num_light;}
 		Light* getLightPointer(){return light;}
 		Light* getLightPointerAt(int _index){return &light[_index];}
 
-		void setCameraMode(int _cameraMode){cameraMode=_cameraMode;}
-		void setNumCamera(int _numCamera){this->numCamera=_numCamera;}
-		int getNumCamera(){return numCamera;}
+		void setCameraMode(int _camera_mode){camera_mode=_camera_mode;}
+		void setNumCamera(int _num_camera){this->num_camera=_num_camera;}
+		int getNumCamera(){return num_camera;}
 		Camera* getCameraPointer(){return camera;}
 		Camera* getCameraPointerAt(int _index){return &camera[_index];}
 

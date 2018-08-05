@@ -16,13 +16,14 @@ namespace EITS{
 
 	enum SELECT_MESH{
 		SELECT_NONE,
-		SELECT_Facet,
-		SELECT_Line,
+		SELECT_FACET,
+		SELECT_LINE,
 		SELECT_POINT
 	};
+
 	enum NORMAL_TYPE{
 		NORMAL_NONE,
-		NORMAL_Facet,
+		NORMAL_FACET,
 		NORMAL_POINT
 	};
 
@@ -35,6 +36,7 @@ namespace EITS{
 			memcpy(&normal, &_node.normal, sizeof(Vector3d));
 			index = _node.index;
 			state = _node.state;
+			is_selected = _node.is_selected;
 			return (*this);
 		}
 		//ノードの番号
@@ -47,6 +49,8 @@ namespace EITS{
 		Vector3d vertex;
 		//法線
 		Vector3d normal;
+		//Selection interface
+		bool is_selected;
 
 		void clear(){
 			this->index = -1;
@@ -54,21 +58,22 @@ namespace EITS{
 			this->label = -1;
 			this->vertex = Vector3d(0,0,0);
 			this->normal = Vector3d(0,0,0);
+			this->is_selected = false;
 		}
 	};
 
 	class Line
 	{
 	public:
-		Line(){is_selecteded=false;}
-		~Line(){;}
-		bool is_selecteded;
+		Line(){is_selected=false;}
+		~Line(){}
+		bool is_selected;
 		Vector3d vertex[2];
 		int index_node[2];
 		Line &operator = (const Line &_line){
 			memcpy(vertex,_line.vertex,sizeof(Vector3d)*2);
 			memcpy(index_node,_line.index_node,sizeof(int)*2);
-			is_selecteded=_line.is_selecteded;
+			is_selected=_line.is_selected;
 			return (*this);
 		}
 		void render(){
@@ -85,8 +90,6 @@ namespace EITS{
 	public:
 		GLenum type;
 
-
-		//TODO：どこかに問題あり？
 		Line line[NUM_VERTEX_MAX];
 		int index_node[NUM_VERTEX_MAX];
 		int index_normal[NUM_VERTEX_MAX];
@@ -94,15 +97,13 @@ namespace EITS{
 		Vector2d vertex_local[NUM_VERTEX_MAX];
 		Vector3d normal[NUM_VERTEX_MAX];
 
-		bool is_selecteded;
-		bool isEnabled;
+		bool is_selected;
+		bool is_enabled;
 		int index_facet;
 		int index_material;
 		int num_node;
 		int num_normal;
 		int num_line;
-		int desIndex;
-		double desAngle;
 		int index_elem;
 
 		Vector3d min;
@@ -110,19 +111,17 @@ namespace EITS{
 		//面積
 		double area;
 
-		int normalType;
+		int normal_type;
 		Facet &operator = (const Facet &_facet){
 			type=_facet.type;
-			this->is_selecteded=_facet.is_selecteded;
-			this->isEnabled=_facet.isEnabled;
+			this->is_selected=_facet.is_selected;
+			this->is_enabled=_facet.is_enabled;
 			index_facet=_facet.index_facet;
 			index_material=_facet.index_material;
 			num_node=_facet.num_node;
 			num_line=_facet.num_line;
 			num_normal=_facet.num_normal;
-			normalType = _facet.normalType;
-			desIndex=_facet.desIndex;
-			desAngle=_facet.desAngle;
+			normal_type = _facet.normal_type;
 			index_elem = _facet.index_elem;
 			area = _facet.area;
 			memcpy(index_node,_facet.index_node,sizeof(int)*num_node);
@@ -132,9 +131,9 @@ namespace EITS{
 			memcpy(line,_facet.line,sizeof(Line)*num_line);
 			return (*this);
 		}
-		Facet(GLenum _type=GL_TRIANGLES, int _num_node=0,	int _normalType=NORMAL_POINT) 
-			: type(_type), num_node(_num_node), num_normal(_num_node), normalType(_normalType),is_selecteded(false)
-			,isEnabled(true),index_material(0),num_line(0),desIndex(0),desAngle(0){
+		Facet(GLenum _type=GL_TRIANGLES, int _num_node=0,	int _normal_type=NORMAL_POINT) 
+			: type(_type), num_node(_num_node), num_normal(_num_node), normal_type(_normal_type),is_selected(false)
+			,is_enabled(true),index_material(0),num_line(0){
 				this->setFacetTypeAsTriangle();
 		}
 		~Facet(){
@@ -173,8 +172,8 @@ namespace EITS{
 			}
 			return max;
 		}
-		bool getis_selecteded(){return this->is_selecteded;}
-		void setis_selecteded(bool _is_selecteded){is_selecteded=_is_selecteded;}
+		bool getIsSelected(){return this->is_selected;}
+		void setIsSelected(bool _is_selected){is_selected=_is_selected;}
 		void calVertexLocal(){
 			Vector3d e1 = (this->vertex[1] - this->vertex[0])/(this->vertex[1] - this->vertex[0]).abs();
 			Vector3d e2 = e1 % this->normal[0];
@@ -193,9 +192,8 @@ namespace EITS{
 					else temp.X[3 * i + j] = this->vertex_local[i].X[ j - 1];
 				}
 			}
-			this->area = fabs(Inverse_LU(result.X, temp.X, 3)) / 2.0;
+			this->area = fabs(inverseLU(result.X, temp.X, 3)) / 2.0;
 			return result;
-//			this->area = ((this->vertex[1]-this->vertex[0]) % (this->vertex[2]-this->vertex[0])).abs() / 2.0;
 		}
 	};
 
@@ -255,7 +253,7 @@ namespace EITS{
 					else temp.X[4 * i + j] = position.X[ 3 * i + j - 1];
 				}
 			}
-			this->volume = fabs(Inverse_LU(result.X, temp.X, 4)) / 6.0;
+			this->volume = fabs(inverseLU(result.X, temp.X, 4)) / 6.0;
 			return result;
 		}
 
@@ -283,25 +281,27 @@ namespace EITS{
 		int num_facet;
 		int num_line;
 		int num_material;
+
+		Vector3d *vertex;
+		Vector3d *normal;
 		Facet *facet;
 		Line *line;
 		Material *material;
-		Material sMat;
-		Material cMat;
-		Vector3d *normal;
-		Vector3d *vertex;
+		Material material_s;
+		Material material_c;
 		Vector3f *color;
-		int *labelIndex;
-		transferMatrixd T_human2traj;
-		bool *is_selecteded;
-		Vector3d center;
-		Vector3d size;
-		Vector3d selectedVertex;
-		int selectedIndex;
+
+		int *label_index;
+		bool *is_selected;
+
 		double scale;
+		Vector3d size;
+		Vector3d center;
+		Vector3d selected_vertex;
+		int selected_index;
 
 		GLuint id;
-		bool isUseDisplayList;
+		bool is_display_list;
 		bool is_listed;
 		bool is_loaded;
 		bool is_view;
@@ -311,7 +311,6 @@ namespace EITS{
 		bool is_auto_scale;
 		bool is_tri;
 		bool is_identity;
-		bool is_selected;
 		bool is_view_label;
 		bool is_alpha_blend;
 		bool is_view_line_extracted;
@@ -354,7 +353,7 @@ namespace EITS{
 		bool getIsViewNode(){return this->is_view_node;}
 		bool getIsViewLine(){return this->is_view_line;}
 		bool getIsViewFacet(){return this->is_view_facet;}
-		bool getIsUseDisplayList(){return this->isUseDisplayList;}
+		bool getIsDisplayList(){return this->is_display_list;}
 		bool getIsVertex_color_enabled(){return this->is_vertex_color_enabled;}
 		bool getIsViewLabel(){return this->is_view_label;}
 
@@ -380,16 +379,15 @@ namespace EITS{
 		void setLine(int _index, Line _line){line[_index]=_line;}
 		Material getMaterial(int _index){return this->material[_index];}
 		Material* getMaterialPointerAt(int _index){return &this->material[_index];}
-		int getLabelIndex(int _index){return this->labelIndex[_index];}
-		transferMatrixd getThuman2traj(){return this->T_human2traj;}
+		int getLabelIndex(int _index){return this->label_index[_index];}
 
 		std::ostream& getInfo(std::ostream &stream);
 		void render();
 		void renderList();
-		GLuint makeDisplayList(int);
+		GLuint makeDisplayList(int _id);
 
 		void setColorAt(int _index, Vector3f _color){this->color[_index]=_color;}
-		void setLabelIndexAt(int _index, int _label){this->labelIndex[_index] = _label;}
+		void setLabelIndexAt(int _index, int _label){this->label_index[_index] = _label;}
 		void setNumNode(int _num_node){this->num_node=_num_node;}
 		void setNumNormal(int _num_normal){this->num_normal=_num_normal;}
 		void setNumFacet(int _num_facet){this->num_facet=_num_facet;}
@@ -403,20 +401,19 @@ namespace EITS{
 		void setIsAutoScale(bool _is_auto_scale){this->is_auto_scale=_is_auto_scale;}
 		void setIsTri(bool _is_tri){this->is_tri=_is_tri;}
 		void setIsIdentity(bool _is_identity){this->is_identity=_is_identity;}
-		void setIsSelected(bool _is_selected){this->is_selected=_is_selected;}
 		void setIsAlpha_blend(bool _is_alpha_blend){this->is_alpha_blend=_is_alpha_blend;}
 		void setIsVertex_color_enabled(bool _is_vertex_color_enabled){this->is_vertex_color_enabled=_is_vertex_color_enabled;}
-		void setIsUseDisplayList(bool _isUseDisplayList){this->isUseDisplayList=_isUseDisplayList;}
+		void setIsDisplayList(bool _is_display_list){this->is_display_list=_is_display_list;}
 
 		//描画座標に最も近い頂点番号を取得する
 		int getVertexIndexNear(Vector3d _pos);
 		int getFacetIndexNear(Vector3d _pos);
-		Vector3d getSelectedVertex(){return this->selectedVertex;}
-		void setSelectedVertex(int _index){this->selectedVertex=this->vertex[_index];}
-		void setSelectedIndex(int _selectedIndex){this->selectedIndex=_selectedIndex;}
+		Vector3d getSelectedVertex(){return this->selected_vertex;}
+		void setSelectedVertex(int _index){this->selected_vertex=this->vertex[_index];}
+		void setSelectedIndex(int _selected_index){this->selected_index=_selected_index;}
 		void clearSelection();
 
-		void quadrization();
+		void quadrize();
 		void centerize();
 	};
 
@@ -494,7 +491,7 @@ namespace EITS{
 		//Information about drawing object
 		std::ostream& getInfo(std::ostream &stream);
 		void render();
-		int makeDisplayList(int _windowID);
+		int makeDisplayList(int _id);
 
 		//Accessor
 		void setNumNode(int _num_node) { this->num_node = _num_node; }
@@ -522,5 +519,5 @@ namespace EITS{
 	bool isSharedLine(Line _new, Line *_old, int _num);
 	bool isSharedFacet(Facet _new, Facet *_old, int _num);
 	bool convertTriangle2Quad(Facet *_tri1, Facet *_tri2);
-	bool isCrossFacet(Facet *_facet1, Facet *_facet2, Vector3d *_Xend);
+	//bool isCrossFacet(Facet *_facet1, Facet *_facet2, Vector3d *_Xend);
 }

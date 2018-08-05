@@ -13,13 +13,15 @@
 #define VC_INIT_ZOOM 20.0
 #define VC_DEFAULT_ZOOM 20.0
 
+
 namespace EITS
 {
 	enum MState{
-		Push,
-		Release,
-		None
+		MOUSE_NONE,
+		MOUSE_PUSH,
+		MOUSE_RELEASE
 	};
+
 	struct Window{
 		char title[256];
 		double fps;
@@ -100,7 +102,7 @@ namespace EITS
 		Vector4f diffuse;
 		Vector4f specular;
 		int id;
-		bool isOn;
+		bool is_on;
 	public:
 		Light();
 		~Light();
@@ -110,14 +112,14 @@ namespace EITS
 		void enable();
 		void disable();
 
-		void setIsOnLight(bool _isOn){this->isOn=_isOn;}
+		void setIsOnLight(bool _is_on){this->is_on=_is_on;}
 		void setID(int _id){this->id=_id;}
 		void setPosition(Vector4f _position){position = _position;}
 		void setAmbient(Vector4f _ambient){ambient = _ambient;}
 		void setDiffuse(Vector4f _diffuse){diffuse = _diffuse;}
 		void setSpecular(Vector4f _specular){specular = _specular;}
 
-		bool getIsOn(){return this->isOn;}
+		bool getIsOn(){return this->is_on;}
 		int getID(){return this->id;}
 		Vector4f getAmbient(){return this->ambient;}
 		Vector4f getDiffuse(){return this->diffuse;}
@@ -134,23 +136,23 @@ namespace EITS
 		MState state;
 		MouseButton();
 		~MouseButton();
-		void Reset();
-		void Update();
+		void reset();
+		void update();
 	};
 	class MouseSelection
 	{
 	protected:
-		bool isDrawSelectRegion;
-		Vector2d leftTop;
-		Vector2d rightBottom;
+		bool is_draw_select_region;
+		Vector2d left_top;
+		Vector2d right_bottom;
 	public:
 		MouseSelection();
 		~MouseSelection();
-		void setIsDrawSelectRegion(bool _isDrawSelectRegion){this->isDrawSelectRegion=_isDrawSelectRegion;}
-		void setLeftTop(Vector2d _leftTop){this->leftTop=_leftTop;}
-		void setRightBottom(Vector2d _rightBottom){this->rightBottom=_rightBottom;}
+		void setIsDrawSelectRegion(bool _is_draw_select_region){this->is_draw_select_region=_is_draw_select_region;}
+		void setLeftTop(Vector2d _left_top){this->left_top=_left_top;}
+		void setRightBottom(Vector2d _right_bottom){this->right_bottom=_right_bottom;}
 		void render();
-		bool getIsDrawSelectRegion(){return this->isDrawSelectRegion;}
+		bool getIsDrawSelectRegion(){return this->is_draw_select_region;}
 	};
 
 	enum CAM_MODE{
@@ -159,6 +161,7 @@ namespace EITS
 		CAM_SIDE,
 		CAM_TOP
 	};
+
 	class Camera
 	{
 	private:
@@ -173,9 +176,9 @@ namespace EITS
 		transferMatrixd Trot;
 		transferMatrixd Ttran;
 
-		int cameraModel;
+		int model;
 
-		void setModelViewMatrix(bool _isScale=true);
+		void setModelViewMatrix(bool _is_scale=true);
 
 	public:
 
@@ -183,12 +186,12 @@ namespace EITS
 		~Camera();
 		void init(int _cameraModel=CAM_PERSP);
 
-		void setCameraModel(int _cameraModel=CAM_PERSP){this->cameraModel=_cameraModel;}
+		void setModel(int _model=CAM_PERSP){this->model=_model;}
 		void resizePersp(Vector2d _size);
-		void resizeOrtho(Vector2d _size, bool _isScale=true);
-		void attachTransMat(bool _isFix=false);
-		void attachRotMat(bool _isScale=true);
-		void attach(Vector2d _size, bool _isScale=true);
+		void resizeOrtho(Vector2d _size, bool _is_scale=true);
+		void attachTransMat(bool _is_fix=false);
+		void attachRotMat(bool _is_scale=true);
+		void attach(Vector2d _size, bool _is_scale=true);
 
 		MouseButton rml[3];
 		void rmlReset();
@@ -215,11 +218,11 @@ namespace EITS
 		void setTproj(transferMatrixd _Tproj){Tproj=_Tproj;}
 		void setTmodel(transferMatrixd _Tmodel){Tmodel=_Tmodel;}
 	};
-	void glutSolidRectangle(Vector3d _size, bool _isVertShade=false);
+
+	void glutSolidRectangle(Vector3d _size, bool _is_vert_shade=false);
 	void glutLineArrows(double _scale=10);
 	void glutAxsis();
 	void glutAxsis(Vector3d _nx, Vector3d _ny, Vector3d _nz);
-	void glutGridGround(double _size, int _numGrid=10);
-
+	void glutGridGround(double _size, int _num_grid=10);
 	void glutDrawTextAt(std::string _text, Vector3d _position);
 };

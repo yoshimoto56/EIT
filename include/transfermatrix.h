@@ -52,7 +52,7 @@ namespace EITS{
 		transferMatrix inv(){
 			transferMatrix<T> src=(*this);
 			transferMatrix<T> dst;
-			Inverse_LU(dst.X,src.X,4);
+			inverseLU(dst.X,src.X,4);
 			return dst;		
 		}
 		transferMatrix getRotate(){

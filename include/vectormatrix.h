@@ -1,33 +1,6 @@
-/* vectorMatrix.h
- *
- * Copyright (c) 2013, Shunsuke YOSHIMOTO.
- * All rights reserved.
- *
- * Redis_tribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redis_tributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redis_tributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the dis_tribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 #pragma once;
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -86,7 +59,7 @@ namespace EITS{
 		delete []weight;
 		return det;
 	}
-	template<class T>T Inverse_LU(T *a_inv, T *a,int n)
+	template<class T>T inverseLU(T *a_inv, T *a,int n)
 	{
 		int i, j, k, ii;
 		T t, det;
@@ -142,11 +115,11 @@ namespace EITS{
 		T &operator()(const int _elem){return X[_elem];}
 		T abs(){T result=0;for(int i=0;i<2;i++)result+=X[i]*X[i];return sqrt((double)result);}
 
-		template <class T>friend Vector2 operator *(const Vector2<T> &u, const T a){Vector2<T> result(u);result*=a;return result;}
-		template <class T>friend Vector2 operator *(const T a, const Vector2<T> &u){Vector2<T> result(u);result*=a;return result;}
-		template <class T>friend Vector2 operator +(const Vector2<T> &u, const Vector2<T> &v){Vector2 result(u);result+=v;return result;}
-		template <class T>friend Vector2 operator -(const Vector2<T> &u, const Vector2<T> &v){Vector2 result(u);result-=v;return result;}
-		template <class T>friend Vector2 operator /(const Vector2<T> &u, const T a){Vector2 result(u);result/=a;return result;}
+		friend Vector2 operator *(const Vector2<T> &u, const T a){Vector2<T> result(u);result*=a;return result;}
+		friend Vector2 operator *(const T a, const Vector2<T> &u){Vector2<T> result(u);result*=a;return result;}
+		friend Vector2 operator +(const Vector2<T> &u, const Vector2<T> &v){Vector2 result(u);result+=v;return result;}
+		friend Vector2 operator -(const Vector2<T> &u, const Vector2<T> &v){Vector2 result(u);result-=v;return result;}
+		friend Vector2 operator /(const Vector2<T> &u, const T a){Vector2 result(u);result/=a;return result;}
 	};
 	template <class T>T operator *(const Vector2<T> &u, const Vector2<T> &v){T result=u.x*v.x+u.y*v.y; return result;}
 	template <class T>std::ostream& operator<<(std::ostream &stream, Vector2<T> &v){return stream <<v.x<<","<<v.y;}
@@ -165,7 +138,6 @@ namespace EITS{
 		Vector3(T _X[3]):x(_X[0]),y(_X[1]),z(_X[2]){}
 		Vector3 &operator=(T v){x=v;y=v;z=v;return(*this);}
 		Vector3 &operator=(const Vector3 &v){x=v.x;y=v.y;z=v.z;return(*this);}
-
 		Vector3 &operator+=(const Vector3 &u){x+=u.x;y+=u.y;z+=u.z;return(*this);}
 		Vector3 &operator-=(const Vector3 &u){x-=u.x;y-=u.y;z-=u.z;return(*this);}
 		Vector3 &operator*=(const Vector3 &u){x*=u.x;y*=u.y;z*=u.z;return(*this);}
@@ -187,12 +159,12 @@ namespace EITS{
 		T &operator()(int _elem){return X[_elem];}
 		T abs(){T result=0;for(int i=0;i<3;i++)result+=X[i]*X[i];return sqrt((double)result);}
 
-		template <class T>friend Vector3 operator *(const Vector3<T> &u, const T a){Vector3<T> result(u);result*=a;return result;}
-		template <class T>friend Vector3 operator *(const T a, const Vector3<T> &u){Vector3<T> result(u);result*=a;return result;}
-		template <class T>friend Vector3 operator +(const Vector3<T> &u, const Vector3<T> &v){Vector3 result(u);result+=v;return result;}
-		template <class T>friend Vector3 operator -(const Vector3<T> &u, const Vector3<T> &v){Vector3 result(u);result-=v;return result;}
-		template <class T>friend Vector3 operator /(const Vector3<T> &u, const T a){Vector3 result(u);result/=a;return result;}
-		template <class T>friend Vector3 operator %(const Vector3<T> &u, const Vector3<T> &v){return Vector3(u.y*v.z-u.z*v.y,u.z*v.x-u.x*v.z,u.x*v.y-u.y*v.x);}
+		friend Vector3 operator *(const Vector3<T> &u, const T a){Vector3<T> result(u);result*=a;return result;}
+		friend Vector3 operator *(const T a, const Vector3<T> &u){Vector3<T> result(u);result*=a;return result;}
+		friend Vector3 operator +(const Vector3<T> &u, const Vector3<T> &v){Vector3 result(u);result+=v;return result;}
+		friend Vector3 operator -(const Vector3<T> &u, const Vector3<T> &v){Vector3 result(u);result-=v;return result;}
+		friend Vector3 operator /(const Vector3<T> &u, const T a){Vector3 result(u);result/=a;return result;}
+		friend Vector3 operator %(const Vector3<T> &u, const Vector3<T> &v){return Vector3(u.y*v.z-u.z*v.y,u.z*v.x-u.x*v.z,u.x*v.y-u.y*v.x);}
 	};
 	template <class T>T operator *(const Vector3<T> &u, const Vector3<T> &v){T result; result=u.x*v.x+u.y*v.y+u.z*v.z; return result;}
 	template <class T> std::ostream &operator<<(std::ostream &stream, const Vector3<T> &v){return stream <<v.x<<","<<v.y<<","<<v.z;}
@@ -228,11 +200,11 @@ namespace EITS{
 		T &operator()(int _elem){return X[_elem];}
 		T abs(){double result=0;for(int i=0;i<4;i++)result+=X[i]*X[i];return sqrt((double)result);}
 
-		template <class T>friend Vector4 operator *(Vector4<T> &u, T a){Vector4 result(u);result*=a;return result;}
-		template <class T>friend Vector4 operator *(T a, Vector4<T> &u){Vector4 result(u);result*=a;return result;}
-		template <class T>friend Vector4 operator +(Vector4<T> &u, Vector4<T> &v){Vector4 result(u);result+=v;return result;}
-		template <class T>friend Vector4 operator -(Vector4<T> &u, Vector4<T> &v){Vector4 result(u);result-=v;return result;}
-		template <class T>friend Vector4 operator /(Vector4<T> &u, T a){Vector4 result(u);result/=a;return result;}
+		friend Vector4 operator *(Vector4<T> &u, T a){Vector4 result(u);result*=a;return result;}
+		friend Vector4 operator *(T a, Vector4<T> &u){Vector4 result(u);result*=a;return result;}
+		friend Vector4 operator +(Vector4<T> &u, Vector4<T> &v){Vector4 result(u);result+=v;return result;}
+		friend Vector4 operator -(Vector4<T> &u, Vector4<T> &v){Vector4 result(u);result-=v;return result;}
+		friend Vector4 operator /(Vector4<T> &u, T a){Vector4 result(u);result/=a;return result;}
 	};
 	template <class T>T operator *(Vector4<T> &u, Vector4<T> &v){T result; result=u.x*v.x+u.y*v.y+u.z*v.z; return result;}
 	template <class T>std::ostream& operator<<(std::ostream& stream, Vector4<T> &v){return stream <<v.x<<","<<v.y<<","<<v.z<<","<<v.w;}
@@ -289,12 +261,12 @@ namespace EITS{
 			this->n=0;
 		}
 
-		template <class T>friend VectorN operator *(VectorN<T> &u, T a){VectorN result(u);result*=a;return result;}
-		template <class T>friend VectorN operator *(T a, VectorN<T> &u){VectorN<T> result(u);result*=a;return result;}
-		template <class T>friend VectorN operator +(VectorN<T> &u, VectorN<T> &v){VectorN result(u);result+=v;return result;}
-		template <class T>friend VectorN operator -(VectorN<T> &u, VectorN<T> &v){VectorN result(u);result-=v;return result;}
-		template <class T>friend VectorN operator /(VectorN<T> &u, T a){VectorN result(u);result/=a;return result;}
-		template <class T>friend VectorN operator %(VectorN<T> &u, VectorN<T> &v){
+		friend VectorN operator *(VectorN<T> &u, T a){VectorN result(u);result*=a;return result;}
+		friend VectorN operator *(T a, VectorN<T> &u){VectorN<T> result(u);result*=a;return result;}
+		friend VectorN operator +(VectorN<T> &u, VectorN<T> &v){VectorN result(u);result+=v;return result;}
+		friend VectorN operator -(VectorN<T> &u, VectorN<T> &v){VectorN result(u);result-=v;return result;}
+		friend VectorN operator /(VectorN<T> &u, T a){VectorN result(u);result/=a;return result;}
+		friend VectorN operator %(VectorN<T> &u, VectorN<T> &v){
 			VectorN result(3);
 			if(u.n!=3)return u;
 			result.X[0]=u.X[1]*v.X[2]-u.X[2]*v.X[1];
@@ -358,7 +330,7 @@ namespace EITS{
 			Matrix<T> src=*this;Matrix<T> dst(n,m);
 			if(src.n==1&&src.m==1)
 				dst.X[0]=1.0/src.X[0];
-			else Inverse_LU(dst.X, src.X,n);
+			else inverseLU(dst.X, src.X,n);
 /*
 			for(int i=0;i<n;i++){
 				for(int j=0;j<n;j++){
@@ -411,9 +383,9 @@ namespace EITS{
 			for(i=0;i<this->m;i++)
 				if(i<this->n)this->X[m*i+i]=1;
 		}
-		template<class T>friend Matrix operator *(const Matrix<T> &u, const T a){Matrix result(u);result*=a;return result;}
-		template<class T>friend Matrix operator *(const T a, const Matrix<T> &u){Matrix result(u);result*=a;return result;}
-		template<class T>friend Matrix operator *(const Matrix<T> &u, const Matrix<T> &v){
+		friend Matrix operator *(const Matrix<T> &u, const T a){Matrix result(u);result*=a;return result;}
+		friend Matrix operator *(const T a, const Matrix<T> &u){Matrix result(u);result*=a;return result;}
+		friend Matrix operator *(const Matrix<T> &u, const Matrix<T> &v){
 			Matrix result(v.n,u.m);
 			for(int i=0;i<u.m;i++)
 				for(int j=0;j<v.n;j++)
@@ -421,9 +393,9 @@ namespace EITS{
 						result.X[v.n*i+j]+=u.X[u.n*i+k]*v.X[v.n*k+j];
 			return result;
 		}
-		template<class T>friend Matrix operator +(const Matrix<T> &u, const Matrix<T> &v){Matrix result(u);result+=v;return result;}
-		template<class T>friend Matrix operator -(const Matrix<T> &u, const Matrix<T> &v){Matrix result(u);result-=v;return result;}
-		template<class T>friend Matrix operator /(const Matrix<T> &u, const T a){Matrix result=u;result/=a;return result;}
+		friend Matrix operator +(const Matrix<T> &u, const Matrix<T> &v){Matrix result(u);result+=v;return result;}
+		friend Matrix operator -(const Matrix<T> &u, const Matrix<T> &v){Matrix result(u);result-=v;return result;}
+		friend Matrix operator /(const Matrix<T> &u, const T a){Matrix result=u;result/=a;return result;}
 
 	};
 	template<class T>VectorN<T> operator *(const Matrix<T> &u, const VectorN<T> &v){
@@ -462,261 +434,3 @@ namespace EITS{
 	typedef	Matrix<double> Matrixd;
 	typedef	Matrix<float> Matrixf;
 }
-
-/****************************************************************************
-** 4*4 dobule Transfer Matrix Class
-****************************************************************************/
-
-/*
-class TransferMatrix{
-private:
-	int i,j,k;
-public:
-	double T[16];
-	double trT[16];
-	TransferMatrix(){for(i=0;i<16;i++)T[i]=0;for(i=0;i<4;i++)T[4*i+i]=1;}
-	TransferMatrix(double *_T){for(i=0;i<16;i++)T[i]=_T[i];}
-	TransferMatrix(float *_T){for(i=0;i<16;i++)T[i]=_T[i];}
-	~TransferMatrix(){};
-	TransferMatrix &operator=(const TransferMatrix &src){for(i=0;i<16;i++)T[i]=src.T[i];return(*this);}
-	TransferMatrix &operator=(const int &src){for(i=0;i<16;i++)T[i]=src;for(i=0;i<4;i++)T[4*i+i]=1;return(*this);}
-	TransferMatrix &operator+=(const TransferMatrix &src){for(i=0;i<16;i++)T[i]+=src.T[i];return(*this);}
-	TransferMatrix &operator-=(const TransferMatrix &src){for(i=0;i<16;i++)T[i]-=src.T[i];return(*this);}
-	TransferMatrix &operator*=(const double &c){for(i=0;i<16;i++)T[i]*=c;return(*this);}
-	TransferMatrix &operator/=(const double &c){for(i=0;i<16;i++)T[i]/=c;return(*this);}
-
-	TransferMatrix &operator*=(const TransferMatrix &src){
-		TransferMatrix result;
-		for(i=0;i<4;i++){
-			for(j=0;j<4;j++){
-				result.T[4*i+j]=0.0;
-				for(k=0;k<4;k++)
-					result.T[4*i+j]+=T[4*i+k]*src.T[4*k+j];
-			}
-		}
-		for(i=0;i<16;i++)T[i]=result.T[i];
-		return(*this);
-	}
-
-	const bool operator!=(const TransferMatrix &src){
-		for(i=0;i<4;i++)
-			for(j=0;j<4;j++)
-				if(this->T[4*i+j]!=src.T[4*i+j])return true;
-		return false;
-	}
-	friend Vector3d operator *(const TransferMatrix &src, const Vector3d &u){
-		Vector3d result=Vector3d();
-		Vector4d temp_input;
-		Vector4d temp_result;
-		for(int i=0;i<3;i++)temp_input.X[i]=u.X[i];
-		temp_input.w=1;
-		for(int i=0;i<4;i++)
-			for(int j=0;j<4;j++)
-				temp_result.X[i]+=src.T[4*i+j]*temp_input.X[j];
-		for(int i=0;i<3;i++)result.X[i]=temp_result.X[i]/temp_result.X[3];
-		return result;
-	}
-	friend Vector3d operator *(const Vector3d &u, const TransferMatrix &src){
-		Vector3d result=Vector3d();
-		Vector4d temp_input=Vector4d();
-		Vector4d temp_result;
-		for(int i=0;i<3;i++)temp_input.X[i]=u.X[i];
-		temp_input.w=1;
-		for(int i=0;i<4;i++)
-			for(int j=0;j<4;j++)
-				temp_result.X[i]+=temp_input.X[j]*src.T[4*j+i];
-		for(int i=0;i<3;i++)result.X[i]=temp_result.X[i]/temp_result.X[3];
-		return result;
-	}
-	friend TransferMatrix operator *(const double c, const TransferMatrix &src){
-		TransferMatrix result=src;result*=c;return result;
-	}
-	friend TransferMatrix operator *(const TransferMatrix &src, const TransferMatrix &dest){
-		TransferMatrix result=src;result*=dest;return result;
-	}
-	friend ostream& operator<<(ostream& stream, const TransferMatrix& v){
-		return stream <<v.T[0]<<","<<v.T[1]<<","<<v.T[2]<<","<<v.T[3]<<std::endl
-					<<v.T[4]<<","<<v.T[5]<<","<<v.T[6]<<","<<v.T[7]<<std::endl
-					<<v.T[8]<<","<<v.T[9]<<","<<v.T[10]<<","<<v.T[11]<<std::endl
-					<<v.T[12]<<","<<v.T[13]<<","<<v.T[14]<<","<<v.T[15]<<std::endl;
-	}
-	TransferMatrix inv();
-	Vector3d rotate(Vector3d);
-	Vector3d inv_rotate(Vector3d);
-	TransferMatrix scale(double);
-	TransferMatrix scale(Vector3d);
-	TransferMatrix translate();
-	TransferMatrix alline_X(Vector3d);
-	TransferMatrix alline_Y(Vector3d);
-	TransferMatrix setScale(Vector3d);
-	TransferMatrix setRotate(Vector3d);
-	TransferMatrix setTranslate(Vector3d);
-	Vector3d getTranslate();
-	TransferMatrix getRotateMatrix();
-	TransferMatrix getTranslateMatrix();
-	double* getTr4OpenGL(){for(int i=0;i<4;i++)for(int j=0;j<4;j++)trT[4*i+j]=T[4*j+i];return trT;}
-};
-class TransferMatrixf{
-private:
-	int i,j,k;
-public:
-	float T[16];
-	TransferMatrixf(){for(i=0;i<16;i++)T[i]=0;for(i=0;i<4;i++)T[4*i+i]=1;}
-	TransferMatrixf(float *_T){for(i=0;i<16;i++)T[i]=_T[i];}
-	TransferMatrixf(double *_T){for(i=0;i<16;i++)T[i]=_T[i];}
-	~TransferMatrixf(){};
-	TransferMatrixf &operator=(const TransferMatrixf &src){for(i=0;i<16;i++)T[i]=src.T[i];return(*this);}
-	TransferMatrixf &operator=(const int &src){for(i=0;i<16;i++)T[i]=src;for(i=0;i<4;i++)T[4*i+i]=1;return(*this);}
-	TransferMatrixf &operator+=(const TransferMatrixf &src){for(i=0;i<16;i++)T[i]+=src.T[i];return(*this);}
-	TransferMatrixf &operator-=(const TransferMatrixf &src){for(i=0;i<16;i++)T[i]-=src.T[i];return(*this);}
-	TransferMatrixf &operator*=(const float &c){for(i=0;i<16;i++)T[i]*=c;return(*this);}
-	TransferMatrixf &operator/=(const float &c){for(i=0;i<16;i++)T[i]/=c;return(*this);}
-
-	TransferMatrixf &operator*=(const TransferMatrixf &src){
-		TransferMatrix result;
-		for(i=0;i<4;i++){
-			for(j=0;j<4;j++){
-				result.T[4*i+j]=0.0;
-				for(k=0;k<4;k++)
-					result.T[4*i+j]+=T[4*i+k]*src.T[4*k+j];
-			}
-		}
-		for(i=0;i<16;i++)T[i]=result.T[i];
-		return(*this);
-	}
-
-	const bool operator!=(const TransferMatrixf &src){
-		for(i=0;i<4;i++)
-			for(j=0;j<4;j++)
-				if(this->T[4*i+j]!=src.T[4*i+j])return true;
-		return false;
-	}
-	friend Vector3d operator *(const TransferMatrixf &src, const Vector3d &u){
-		Vector3d result=Vector3d();
-		Vector4d temp_input;
-		Vector4d temp_result;
-		for(int i=0;i<3;i++)temp_input.X[i]=u.X[i];
-		temp_input.w=1;
-		for(int i=0;i<4;i++)
-			for(int j=0;j<4;j++)
-				temp_result.X[i]+=src.T[4*i+j]*temp_input.X[j];
-		for(int i=0;i<3;i++)result.X[i]=temp_result.X[i]/temp_result.X[3];
-		return result;
-	}
-	friend Vector3d operator *(const Vector3d &u, const TransferMatrixf &src){
-		Vector3d result=Vector3d();
-		Vector4d temp_input=Vector4d();
-		Vector4d temp_result;
-		for(int i=0;i<3;i++)temp_input.X[i]=u.X[i];
-		temp_input.w=1;
-		for(int i=0;i<4;i++)
-			for(int j=0;j<4;j++)
-				temp_result.X[i]+=temp_input.X[j]*src.T[4*j+i];
-		for(int i=0;i<3;i++)result.X[i]=temp_result.X[i]/temp_result.X[3];
-		return result;
-	}
-	friend TransferMatrixf operator *(const float c, const TransferMatrixf &src){
-		TransferMatrixf result=src;result*=c;return result;
-	}
-	friend TransferMatrixf operator *(const TransferMatrixf &src, const TransferMatrixf &dest){
-		TransferMatrixf result=src;result*=dest;return result;
-	}
-	friend ostream& operator<<(ostream& stream, const TransferMatrixf& v){
-		return stream <<v.T[0]<<","<<v.T[1]<<","<<v.T[2]<<","<<v.T[3]<<std::endl
-					<<v.T[4]<<","<<v.T[5]<<","<<v.T[6]<<","<<v.T[7]<<std::endl
-					<<v.T[8]<<","<<v.T[9]<<","<<v.T[10]<<","<<v.T[11]<<std::endl
-					<<v.T[12]<<","<<v.T[13]<<","<<v.T[14]<<","<<v.T[15]<<std::endl;
-	}
-	TransferMatrixf inv();
-	Vector3d rotate(Vector3d);
-	Vector3d inv_rotate(Vector3d);
-	TransferMatrixf scale(double);
-	TransferMatrixf scale(Vector3d);
-	TransferMatrixf translate();
-	TransferMatrixf alline_X(Vector3d);
-	TransferMatrixf alline_Y(Vector3d);
-	TransferMatrixf setScale(Vector3d);
-	TransferMatrixf setRotate(Vector3d);
-	TransferMatrixf setTranslate(Vector3d);
-	Vector3d getTranslate();
-	TransferMatrixf getRotateMatrix();
-	TransferMatrixf getTranslateMatrix();
-};
-class Calibration{
-private:
-	Vector3d posA[1000];
-	Vector3d posB[1000];
-	TransferMatrix T;
-	int numPoint;
-	Matrix P_A;
-	Matrix P_B;
-	Matrix T_temp;
-public:
-	Calibration();
-	~Calibration();
-	void setPosA(Vector3d);
-	void setPosB(Vector3d);
-	void clearPoints();
-	TransferMatrix genCalibratedTM();
-	TransferMatrix getCalibratedTM();
-	bool loadCalibratedTM(const char*);
-	bool saveCalibratedTM(const char*);
-};
-
-class Quaternion{
-private:
-	union {struct{double t,x,y,z;};double X[4];};
-public:
-	Quaternion(){t=x=y=z=0;}
-	~Quaternion(){}
-	Quaternion &operator=(const Quaternion &src){for(int i=0;i<4;i++)X[i]=src.X[i];return(*this);}
-	Quaternion &operator*=(const Quaternion &src){
-		Vector3d u(x, y, z);
-		Vector3d v(src.x, src.y, src.z);
-		Vector3d dst;
-		double w;
-		w=t*src.t-u*v;
-		dst=t*v+src.t*u+u%v;
-		this->t=w;
-		this->x=dst.x;
-		this->y=dst.y;
-		this->z=dst.z;
-		return(*this);
-	}
-	friend Quaternion operator *(const Quaternion &u, const Quaternion &v){
-		Quaternion dst=u;
-		dst*=v;
-		return dst;
-	}
-	//Ç±ÇÍÇÕç¿ïWÇÃê›íË
-	void setQuatCoord(Vector3d _src){this->t=0;this->x=_src.x;this->y=_src.y;this->z=_src.z;}
-	//Ç±ÇÍÇÕã§ñQuaternionÇÃéÊìæ
-	Quaternion bar(){Quaternion dst; dst.t=t; dst.x=-x; dst.y=-y; dst.z=-z; return dst;}
-	//Ç±ÇÍÇÕé≤é¸ÇËÇÃâÒì]Çï\Ç∑QuaternionÇÃê›íË
-	void setQuatRotation(double _angle, Vector3d _axis){
-		_axis=_axis/_axis.abs();
-		t=cos(_angle/2); x=_axis.x*sin(_angle/2); y=_axis.y*sin(_angle/2); z=_axis.z*sin(_angle/2);
-	}
-	double getAngle(){		return t;	}
-	Vector3d getVector3d(){		return Vector3d(x,y,z);	}
-	//Ç±ÇÍÇÕQuaternionÇ©ÇÁïœä∑çsóÒÇ÷ÇÃïœä∑
-	TransferMatrix getTransferMatrix(){
-	}
-};
-*/
-/****************************************************************************
-** Vector and Matrix Calculation Function
-****************************************************************************/
-/*
-namespace MathCalMethod{
-	template<class T>T lu(int, T*, int*);
-	template<class T>T Inverse_LU(T*, T*,int);
-//	template<class T>T Inverse_Gauss(Matrix<T>*, Matrix<T>*);
-
-	Vector3d getRotatedVector(double _angle, Vector3d _axis, Vector3d _src);
-	bool isSameDirection(double _torarance, Vector3d _vec1, Vector3d _vec2);
-	double getAngleBetween(Vector3d _vec1, Vector3d _vec2);
-};
-
-
-*/

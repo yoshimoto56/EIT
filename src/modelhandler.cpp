@@ -23,6 +23,7 @@ namespace EITS
 		std::cout<<"[OK]"<<std::endl;
 		return true;
 	}
+
 	bool convertOBJ2VOX(ObjMesh *_obj, VoxModel *_vox, int _num)
 	{
 		std::cout<<"Converting OBJ data to VOX data ...";
@@ -41,12 +42,13 @@ namespace EITS
 			t_color.x=_obj->getMaterial(_obj->getFacet(i).index_material).getDiffuse().x;
 			t_color.y=_obj->getMaterial(_obj->getFacet(i).index_material).getDiffuse().y;
 			t_color.z=_obj->getMaterial(_obj->getFacet(i).index_material).getDiffuse().z;
-			testIntersection(_obj->getFacetPointer(i),_vox,t_color,1);
+			testIntersection(_obj->getFacetPointer(i),_vox,t_color);
 		}
 
 		std::cout<<"[OK]"<<std::endl;
 		return true;
 	}
+
 	bool convertOBJ2STL(ObjMesh *_obj, StlMesh *_stl)
 	{
 		std::cout<<"Converting OBJ data to STL data ...";
@@ -74,6 +76,7 @@ namespace EITS
 		std::cout<<"[OK]"<<std::endl;
 		return true;
 	}
+
 	bool convertSTL2OBJ(StlMesh *_stl, ObjMesh *_obj)
 	{
 		std::cout<<"Converting STL data to OBJ data ...";
@@ -102,6 +105,8 @@ namespace EITS
 
 	bool convertSTL2FEM(StlMesh *_stl, VolumeMesh *_fem, double val)
 	{
+		std::cout << "Converting STL data to FEM data ...";
+
 		tetgenio in, out, addin, bgmin;
 		tetgenbehavior test;
 		char **argv;
@@ -118,6 +123,7 @@ namespace EITS
 		sprintf_s(argv[2], 256, "temp.stl");
 		argc = 3;
 		if (!test.parse_commandline(argc, argv)) {
+			std::cout << "[FAIL]" << std::endl;
 			return false;
 		}
 		if (test.refine) {
@@ -152,12 +158,16 @@ namespace EITS
 		//Delete temp file
 		remove("temp.stl");
 		if (!convertTetGen2FEM(&out, _fem)){
+			std::cout << "[FAIL]" << std::endl;
 			return false;
 		}
 		free(argv);
 		_fem->setup();
+
+		std::cout << "[OK]" << std::endl;
 		return true;
 	}
+
 	bool convertSTL2TetGen(StlMesh *_stl, tetgenio *_in)
 	{
 		tetgenio::facet *f;
@@ -188,10 +198,11 @@ namespace EITS
 			for (int j = 0; j>3; j++) {
 				p->vertexlist[j] = _stl->getFacet(i).index_node[j];
 			}
-			_in->facetmarkerlist[i] = 0;//ここが不明
+			_in->facetmarkerlist[i] = 0;
 		}
 		return true;
 	}
+
 	bool convertTetGen2FEM(tetgenio *_out, VolumeMesh *_fem)
 	{
 		_fem->clear();
@@ -234,15 +245,18 @@ namespace EITS
 		Wmax=_facet->getMaxVertex();
 		Vmin=_vox->Tr.getModel2Voxel()*Wmin;
 		Vmax=_vox->Tr.getModel2Voxel()*Wmax;
-		for(j=Vmin.x-_thickness;j<Vmax.x+_thickness;j++){
+		for(j=(int)(Vmin.x-_thickness);j<(int)(Vmax.x+_thickness);j++){
 			if(0<=j&&j<_vox->getWidth()){
-				for(k=Vmin.y-_thickness;k<Vmax.y+_thickness;k++){
+				for(k= (int)(Vmin.y-_thickness);k<(int)(Vmax.y+_thickness);k++){
 					if(0<=k&&k<_vox->getHeight()){
-						for(l=Vmin.z-_thickness;l<Vmax.z+_thickness;l++){
+						for(l= (int)(Vmin.z-_thickness);l<(int)(Vmax.z+_thickness);l++){
 							if(0<=l&&l<_vox->getDepth()){
 								isIntersectFaceBox.setData(_vox->getSize().x/2.0,_vox->getCenter(j,k,l).X,vp);
 								if(isIntersectFaceBox.triBoxOverlap()){
-									_vox->setVoxelValue(j,k,l,_map);
+									for (int dx = -1;dx<2;dx++)
+										for (int dy = -1;dy<2;dy++)
+											for(int dz=-1;dz<2;dz++)
+										_vox->setVoxelValue(j+dx,k+dy,l+dz,_map);
 								}
 							}
 						}
@@ -251,6 +265,7 @@ namespace EITS
 			}
 		}
 	}
+
 	void testIntersection(Facet *_facet, VoxModel *_vox, Vector3d _color, int _thickness)
 	{
 		AABBtest isIntersectFaceBox;
@@ -273,7 +288,10 @@ namespace EITS
 							if(0<=l&&l<_vox->getDepth()){
 								isIntersectFaceBox.setData(_vox->getSize().x/2.0,_vox->getCenter(j,k,l).X,vp);
 								if(isIntersectFaceBox.triBoxOverlap()){
-									_vox->setVoxelColor(j,k,l,_color);
+									for (int dx = -1;dx<2;dx++)
+										for (int dy = -1;dy<2;dy++)
+											for (int dz = -1;dz<2;dz++)
+												_vox->setVoxelColor(j + dx, k + dy, l + dz, _color);
 								}
 							}
 						}
@@ -282,6 +300,7 @@ namespace EITS
 			}
 		}
 	}
+
 	bool calOBJandVOXcollision(ObjMesh *_obj, VoxModel *_vox, int *_index)
 	{
 		int num = _obj->getNumNode();
@@ -327,9 +346,9 @@ namespace EITS
 		}
 		return max;
 	}
-	bool calBLADEandVOXcollision(transferMatrixd _Tw2o, BLADE *_blade, VoxModel *_vox, int *_index, Vector3d *_points, int *_numPoints)
+	bool calBLADEandVOXcollision(transferMatrixd _Tw2o, BLADE *_blade, VoxModel *_vox, int *_index, Vector3d *_points, int *_num_points)
 	{
-		*_numPoints=0;
+		*_num_points=0;
 		int numPoints=0;
 		int num = _blade->getNumPc();
 		int index=-1;
@@ -354,7 +373,7 @@ namespace EITS
 				}
 			}
 		}
-		*_numPoints=numPoints;
+		*_num_points=numPoints;
 		return isCollide;
 	}*/
 	/*
@@ -390,11 +409,12 @@ namespace EITS
 			}
 		}
 	}
-	void millingVOXbyPOINTS(VoxModel *_vox, Vector3d *_points, double *_depth, int _numPoints)
+
+	void millingVOXbyPOINTS(VoxModel *_vox, Vector3d *_points, double *_depth, int _num_points)
 	{
 		int index;
 		if(_vox->getIsLoaded()){
-			for(int i=0;i<_numPoints;i++){
+			for(int i=0;i<_num_points;i++){
 				index=_vox->getIndexOfVoxelAt(_points[i],COORD_LOCAL);
 				if(index!=-1){
 					if(_vox->getColorAt(index)!=INVIS_COL){
@@ -418,6 +438,7 @@ namespace EITS
 			_obj->setLabelIndexAt(i,_vox->getLabelIndexAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))));
 		}
 	}
+
 	void setLabelOBJNearest(ObjMesh *_obj)
 	{
 		double mdist;
@@ -436,6 +457,7 @@ namespace EITS
 			}
 		}
 	}
+
 	/*
 	void clippingVOXbyPLANE(VoxModel *_vox, PLANE *_plane, int _numPlane)
 	{
@@ -453,6 +475,7 @@ namespace EITS
 		}
 	}
 	*/
+
 	transferMatrixd ICP::getOptimalRegistration(ObjMesh *_objA, ObjMesh *_objB, int _mode, double minError)
 	{
 		int numPoint=_objA->getNumNode();
@@ -494,14 +517,15 @@ namespace EITS
 		delete []error;
 		return _objA->Tr.getWorld2Model();
 	}
+
 	//最近傍点の取得
-	void  ICP::matching(int _numPoint, Vector3d *_pointA, Vector3d *_pointB, ObjMesh *_objB, int _mode)
+	void  ICP::matching(int _num_point, Vector3d *_pointA, Vector3d *_pointB, ObjMesh *_objB, int _mode)
 	{
 		double dist=0;
 		double mDist=INT_MAX;
 		Vector3d normal;
 		Vector3d vertex;
-		for(int i=0;i<_numPoint;i++){
+		for(int i=0;i<_num_point;i++){
 			if(_mode==ICP2P){//点と点の場合
 				for(int j=0;j<_objB->getNumNode();j++){
 				}
@@ -520,6 +544,7 @@ namespace EITS
 			}
 		}
 	}
+
 	double  ICP::errorMetric(double *_error, Vector3d *_pointB, ObjMesh *_objA)
 	{
 		double error=0;
@@ -535,38 +560,40 @@ namespace EITS
 		}
 		for(int i=0;i<_objA->getNumNode();i++){
 			if(max!=0){
-				Vector3d color=HSV2RGB(Vector3d(240.0-240.0*(_error[i]-min)/(max-min),1,1));
+				Vector3d color=hsv2rgb(Vector3d(240.0-240.0*(_error[i]-min)/(max-min),1,1));
 				_objA->setColorAt(i,Vector3f(color.x, color.y, color.z));
 			}
 		}
 		return sqrt(error)/_objA->getNumNode();
 	}
-	Vector3d  ICP::centering(int _numPoint, Vector3d *_point)
+	Vector3d  ICP::centering(int _num_point, Vector3d *_point)
 	{
 		Vector3d center;
-		for(int i=0;i<_numPoint;i++)
-			center+=_point[i]/(double)_numPoint;
+		for(int i=0;i<_num_point;i++)
+			center+=_point[i]/(double)_num_point;
 		return center;
 	}
-	Vector3d  ICP::translating(int _numPoint, Vector3d *_pointA, Vector3d *_pointB){
-		Vector3d centerA=ICP::centering(_numPoint,_pointA);
-		Vector3d centerB=ICP::centering(_numPoint,_pointB);
+
+	Vector3d  ICP::translating(int _num_point, Vector3d *_pointA, Vector3d *_pointB){
+		Vector3d centerA=ICP::centering(_num_point,_pointA);
+		Vector3d centerB=ICP::centering(_num_point,_pointB);
 		return centerB-centerA;
 	}
-	transferMatrixd ICP::rotating(int _numPoint, Vector3d *_pointA, Vector3d *_pointB)
+
+	transferMatrixd ICP::rotating(int _num_point, Vector3d *_pointA, Vector3d *_pointB)
 	{
 		transferMatrixd Trot;
-		Matrixd Xa = Matrixd(_numPoint, 3);
-		Matrixd Xb = Matrixd(_numPoint, 3);
+		Matrixd Xa = Matrixd(_num_point, 3);
+		Matrixd Xb = Matrixd(_num_point, 3);
 		Matrixd R = Matrixd(3, 3);
-		for(int i=0;i<_numPoint;i++){
-			Xa.X[_numPoint*0+i]=_pointA[i].x;
-			Xa.X[_numPoint*1+i]=_pointA[i].y;
-			Xa.X[_numPoint*2+i]=_pointA[i].z;
+		for(int i=0;i<_num_point;i++){
+			Xa.X[_num_point*0+i]=_pointA[i].x;
+			Xa.X[_num_point*1+i]=_pointA[i].y;
+			Xa.X[_num_point*2+i]=_pointA[i].z;
 
-			Xb.X[_numPoint*0+i]=_pointB[i].x;
-			Xb.X[_numPoint*1+i]=_pointB[i].y;
-			Xb.X[_numPoint*2+i]=_pointB[i].z;
+			Xb.X[_num_point*0+i]=_pointB[i].x;
+			Xb.X[_num_point*1+i]=_pointB[i].y;
+			Xb.X[_num_point*2+i]=_pointB[i].z;
 		}
 		if((Xa*Xa.trn()).det()!=0){
 			R=Xb*Xa.trn()*(Xa*Xa.trn()).inv();
@@ -580,23 +607,24 @@ namespace EITS
 		R.free();
 		return Trot;
 	}
-	transferMatrixd ICP::minimizing(int _numPoint, Vector3d *_pointA, Vector3d *_pointB)
+
+	transferMatrixd ICP::minimizing(int _num_point, Vector3d *_pointA, Vector3d *_pointB)
 	{
 		transferMatrixd Ttran;
 		transferMatrixd Trot;
 		transferMatrixd TcenterA;
 		transferMatrixd TcenterB;
-		Vector3d *pointA=new Vector3d[_numPoint];
-		Vector3d *pointB=new Vector3d[_numPoint];
-		Ttran.setTranslate(ICP::translating(_numPoint, _pointA, _pointB));
-		TcenterA.setTranslate(ICP::centering(_numPoint,_pointA));
-		TcenterB.setTranslate(ICP::centering(_numPoint,_pointB));
+		Vector3d *pointA=new Vector3d[_num_point];
+		Vector3d *pointB=new Vector3d[_num_point];
+		Ttran.setTranslate(ICP::translating(_num_point, _pointA, _pointB));
+		TcenterA.setTranslate(ICP::centering(_num_point,_pointA));
+		TcenterB.setTranslate(ICP::centering(_num_point,_pointB));
 
-		for(int i=0;i<_numPoint;i++){
+		for(int i=0;i<_num_point;i++){
 			pointA[i]=TcenterA.inv()*_pointA[i];
 			pointB[i]=TcenterB.inv()*_pointB[i];
 		}
-		Trot=ICP::rotating(_numPoint, pointA, pointB);
+		Trot=ICP::rotating(_num_point, pointA, pointB);
 
 		delete []pointA;
 		delete []pointB;
@@ -650,42 +678,3 @@ namespace EITS
 		return dst;
 	}
 };
-
-/*
-
-bool INTERACTION::intractINSTandVOX(Instrument *_inst, voxelHandler *_vox)
-{
-	bool isInteracted=false;
-	if(!_inst->getTool()->getIsLoaded()||!_vox->getIsLoaded())return isInteracted;
-	int num=_inst->getTool()->num_vertex;
-	Vector3d Pworld;
-	int max=0;
-	for(int i=0; i<num; i++){
-		Pworld=_inst->getTw2v()*_inst->getTi2w()*_inst->getTool()->vertex[i]*2;//VRスペースでは座標を2倍にする
-		if(_vox->millingSurfaceWith(Pworld))
-			isInteracted=true;
-	}
-	return isInteracted;
-}
-
-
-int INTERACTION::navigateINSTwithVOX(Instrument *_inst, voxelHandler *_vox)
-{
-	if(!_inst->getTool()->getIsLoaded()||!_vox->getIsLoaded())return 0;
-	int num=_inst->getTool()->num_vertex;
-	Vector3d Pworld;
-	int max=0;
-	int val;
-	for(int i=0; i<num; i++){
-//		Pworld=_inst->getTw2v()*_inst->getTi2w()*_inst->getTool()->vertex[i];//オリジナル
-		Pworld=_inst->getTi2w()*_inst->getTool()->vertex[i];//仮に２倍にしている
-		val=_vox->navigateWith(Pworld);
-		if(max<val)
-			max=val;
-	}
-	return max;
-}
-
-
-
-*/

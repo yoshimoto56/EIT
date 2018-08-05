@@ -73,6 +73,7 @@ namespace EITS{
 		void setColorAt(int _x, int _y, int *_rgb);
 		void setColorAt(int _x, int _y, double *_rgb);
 		void setColorAt(int _index, int *_rgb);
+		void setColorAt(int _index, Vector3d _color);
 		void setColorAt(int _x, int _y, int _luminance);
 		int getColorRedAt(int _x, int _y);
 		int getColorGreenAt(int _x, int _y);

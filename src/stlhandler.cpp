@@ -39,7 +39,7 @@ namespace EITS
 
 	bool StlMesh::loadASCII(const char* _filename)
 	{
-		int temp_countFacet=0;
+		int temp_count_facet = 0;
 		std::ifstream file;
 		Facet sample;
 		char buf[256];
@@ -75,14 +75,14 @@ namespace EITS
 					sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &sample.vertex[1].x,&sample.vertex[1].y,&sample.vertex[1].z);
 					file.getline(buf, sizeof(buf));
 					sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &sample.vertex[2].x,&sample.vertex[2].y,&sample.vertex[2].z);
-					sample.index_facet=temp_countFacet;
-					sample.normalType=NORMAL_Facet;
-					this->facet[temp_countFacet]=sample;
-					sample.index_normal[0]=temp_countFacet;
-					sample.index_normal[0]=temp_countFacet;
-					sample.index_normal[0]=temp_countFacet;
-					normal[temp_countFacet]=sample.normal[0];
-					temp_countFacet++;
+					sample.index_facet=temp_count_facet;
+					sample.normal_type=NORMAL_FACET;
+					this->facet[temp_count_facet]=sample;
+					sample.index_normal[0]=temp_count_facet;
+					sample.index_normal[0]=temp_count_facet;
+					sample.index_normal[0]=temp_count_facet;
+					normal[temp_count_facet]=sample.normal[0];
+					temp_count_facet++;
 			}
 		}
 		file.close();

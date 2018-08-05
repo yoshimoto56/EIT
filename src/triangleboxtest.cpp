@@ -3,12 +3,11 @@
 namespace EITS
 {
 
-	void AABBtest::setData(double _boxSize, double *_boxCenter, double *_triangleVertex){
-		voxel.size=Vector3d(_boxSize,_boxSize,_boxSize);
-		voxel.center=Vector3d(_boxCenter);
-		for(i=0;i<3;i++)triangle.vertex[i]=Vector3d(&_triangleVertex[i*3]);
+	void AABBtest::setData(double _box_size, double *_box_center, double *_triangle_vertex){
+		voxel.size=Vector3d(_box_size,_box_size,_box_size);
+		voxel.center=Vector3d(_box_center);
+		for(i=0;i<3;i++)triangle.vertex[i]=Vector3d(&_triangle_vertex[i*3]);
 	}
-
 
 	int AABBtest::planeBoxOverlap(double d)
 	{

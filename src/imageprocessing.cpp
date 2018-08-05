@@ -122,6 +122,12 @@ namespace EITS
 			for(int i=0;i<depth();i++)
 				data[depth()*_index+i]=_rgb[i];
 	}
+	void IMG::setColorAt(int _index, Vector3d _color)
+	{
+		if (0 <= _index&&_index<width()*height())
+			for (int i = 0;i<depth();i++)
+				data[depth()*_index + i] = _color.X[i];
+	}
 	void IMG::setColorAt(int _x, int _y, int _luminance)
 	{
 		if(0<=_x&&_x<width()&&0<=_y&&_y<height())
@@ -186,11 +192,11 @@ namespace EITS
 
 	bool getPsudeColor(IMG *_dst, IMG *_src){
 		ColorMap map;
-		map.setParam(0,255,0,200);
+		map.setParam(0,255);
 		if(_dst->width()!=_src->width()||_dst->height()!=_src->height())
 			return false;
 		for(int i=0;i<_src->width()*_src->height();i++)
-			_dst->setColorAt(i,map.getColorMapip(_src->getColorLumiAt(i)));
+			_dst->setColorAt(i,map.getColorMap(_src->getColorLumiAt(i)));
 		return true;
 	}
 	bool getFilteredImage(IMG *_dst, IMG *_src, Matrixd _ker){

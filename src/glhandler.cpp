@@ -7,39 +7,41 @@ namespace EITS
 	utilities GLHandler::dt;
 	int GLHandler::key;
 	Camera* GLHandler::camera;
-	int GLHandler::cameraMode;
-	int GLHandler::numCamera;
+	int GLHandler::camera_mode;
+	int GLHandler::num_camera;
 	Light* GLHandler::light;
-	int GLHandler::numLight;
+	int GLHandler::num_light;
 	MouseSelection GLHandler::select;
 	Object* GLHandler::object;
-	Vector3d GLHandler::posClicked;
-	bool GLHandler::isRun;
-	bool GLHandler::is_viewGrid;
+	Vector3d GLHandler::pos_clicked;
+	bool GLHandler::is_run;
+	bool GLHandler::is_view_grid;
 
 	GLHandler::GLHandler()
 	{
 		this->object=new Object;
-		this->light=new Light[MAX_LIGHT_NUM];
-		this->camera=new Camera[MAX_CAMERA_NUM];
-		this->cameraMode=CAM_PERSP;
-		this->numCamera=5;
-		this->numLight=3;
-		this->isRun=true;
-		this->is_viewGrid=true;
+		this->camera = new Camera[NUM_CAMERA_MAX];
+		this->light=new Light[NUM_LIGHT_MAX];
+		this->camera_mode=CAM_PERSP;
+		this->num_camera=NUM_CAMERA_DEFAULT;
+		this->num_light= NUM_LIGHT_DEFAULT;
+		this->is_run=true;
+		this->is_view_grid=true;
 	}
+
 	GLHandler::~GLHandler()
 	{
 		delete object;
 		delete []camera;
 		delete []light;
 	}
+
 	void GLHandler::init(int *_argc, char **_argv)
 	{
-		for(int i=0;i<numCamera;i++){
+		for(int i=0;i<num_camera;i++){
 			camera[i].init(i);
 		}
-		for(int i=0;i<numLight;i++){
+		for(int i=0;i<num_light;i++){
 			light[i].init();
 			light[i].setID(i);
 		}
@@ -50,6 +52,7 @@ namespace EITS
 		light[2].setPosition(Vector4f( 0, 1000.0, -1000.0, 1.0 ));
 		glutInit(_argc,_argv);
 	}
+
 	void GLHandler::initGL()
 	{
 		glClearColor(0,0,0,1);
@@ -69,22 +72,23 @@ namespace EITS
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
+
 	void GLHandler::displayGL()
 	{
-		if(!isRun)return;
+		if(!is_run)return;
 		startFrame();
 
-		camera[cameraMode].attach(window.size);
+		camera[camera_mode].attach(window.size);
 
 		glPushMatrix();	
-		for(int i=0;i<numLight;i++){
+		for(int i=0;i<num_light;i++){
 			light[i].enable();
 			light[i].set();
 		}
 		glPopMatrix();
 
 		glPushMatrix();
-		if(is_viewGrid)
+		if(is_view_grid)
 			glutGridGround(20);
 		glPopMatrix();
 
@@ -127,6 +131,7 @@ namespace EITS
 		glReadPixels(_x,viewport[3]-_y,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&depth);
 		return depth;
 	}
+
 	Vector3d GLHandler::returnCameraCo(Vector3d _object){
 		Vector3d V_camera;
 		GLdouble mvMatrix[16],pjMatrix[16];
@@ -137,6 +142,7 @@ namespace EITS
 		gluProject(_object.x,_object.y,_object.z,mvMatrix,pjMatrix,viewport,&V_camera.x,&V_camera.y,&V_camera.z);
 		return V_camera;
 	}
+
 	Vector3d GLHandler::returnWorldCo(Vector3d V_camera){
 		Vector3d V_world;
 		GLdouble mvMatrix[16],pjMatrix[16];
@@ -152,20 +158,20 @@ namespace EITS
 	{
 		key = glutGetModifiers();
 		//クリックした点の3次元座標を取得
-		camera[cameraMode].attach(window.size);
+		camera[camera_mode].attach(window.size);
 		Vector3d pos_world = returnWorldCo(Vector3d(_x,_y,returnDepth(_x,_y)));
-		posClicked = pos_world;
+		pos_clicked = pos_world;
 //		if(key==GLUT_ACTIVE_ALT){
 			if(_state==GLUT_DOWN){
-				if(_button==GLUT_MIDDLE_BUTTON||cameraMode==0){
-					camera[cameraMode].MouseInput(_button, Vector2f((float)_x, (float)_y));
-					camera[4].setAngle(camera[cameraMode].getAngle());
+				if(_button==GLUT_MIDDLE_BUTTON||camera_mode==0){
+					camera[camera_mode].MouseInput(_button, Vector2f((float)_x, (float)_y));
+					camera[4].setAngle(camera[camera_mode].getAngle());
 				}
 			}
 			else if(_state=GLUT_UP){
-				camera[cameraMode].rmlUpdate();
-				camera[4].rml[0].Update();
-				camera[4].rml[2].Update();
+				camera[camera_mode].rmlUpdate();
+				camera[4].rml[0].update();
+				camera[4].rml[2].update();
 //			}
 		}
 		static double sx,sy;
@@ -207,12 +213,12 @@ namespace EITS
 
 	void GLHandler::mouseMoveEventGL(int _x, int _y)
 	{
-		camera[cameraMode].attach(window.size);
+		camera[camera_mode].attach(window.size);
 		Vector3d pos_world = returnWorldCo(Vector3d(_x,_y,returnDepth(_x,_y)));
 
-		if(cameraMode==0){
-			camera[cameraMode].MouseMotion(Vector2f(_x,_y));
-			camera[4].setAngle(camera[cameraMode].getAngle());
+		if(camera_mode==0){
+			camera[camera_mode].MouseMotion(Vector2f(_x,_y));
+			camera[4].setAngle(camera[camera_mode].getAngle());
 			camera[4].update();
 		}
 
@@ -225,20 +231,23 @@ namespace EITS
 	{
 		key = _key;
 		if(key==' '){
-			cameraMode=(cameraMode+1)%4;
-			camera[4].setAngle(camera[cameraMode].getAngle());
+			camera_mode=(camera_mode+1)%4;
+			camera[4].setAngle(camera[camera_mode].getAngle());
 			camera[4].update();
 		}
 	}
+
 	void GLHandler::mouseWheelGL(int _wheel, int _direction, int _x, int _y)
 	{
-		camera[cameraMode].setZoom(camera[cameraMode].getZoom()+_direction);
-		camera[cameraMode].MouseMotion(Vector2f(0,0), false, false, false);
+		camera[camera_mode].setZoom(camera[camera_mode].getZoom()+_direction);
+		camera[camera_mode].MouseMotion(Vector2f(0,0), false, false, false);
 	}
+
 	void GLHandler::idle()
 	{
 		glutPostRedisplay();
 	}
+
 	void GLHandler::resize(int _width, int _height)
 	{
 		window.size.x=_width;

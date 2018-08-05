@@ -1,7 +1,6 @@
 #pragma once
 #include <windows.h>
 
-
 namespace EITS
 {
 	class utilities

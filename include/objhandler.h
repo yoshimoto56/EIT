@@ -13,13 +13,13 @@ namespace EITS
 	protected:
 		bool loadOBJFile(const char *filename);
 		bool loadMTLFile(const char *filename);
-		char objFileName[256];
-		char mtlFileName[256];
-		char directoryName[256];
+		char filename_obj[256];
+		char filename_mtl[256];
+		char directoryname[256];
 	public:
 		ObjMesh(SurfMesh *parent = 0){}
 		~ObjMesh(){}
-		char* getName(){return this->objFileName;}
+		char* getName(){return this->filename_obj;}
 		bool load(const char *_filename);
 		bool save(const char *_filename);
 		void setup();

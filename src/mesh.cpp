@@ -8,17 +8,11 @@ namespace EITS{
 		,is_view(true),is_view_line(false),is_view_node(false),is_view_facet(true)
 		,is_auto_scale(true),is_loaded(false),is_tri(false),is_identity(false)
 		,is_selected(false),is_alpha_blend(false),is_view_line_extracted(false)
-		,is_listed(true),isUseDisplayList(false),is_vertex_color_enabled(false),
+		,is_listed(true),is_display_list(false),is_vertex_color_enabled(false),
 		is_view_label(false)
 	{
 		this->newMesh();
 		this->newMaterial();
-		sMat.setDiffuse(Vector4f(1,1,0,0.5));
-		sMat.setAmbient(Vector4f(1,1,0,0.5));
-		cMat.setAmbient(Vector4f(0.0,0.0,0.0,1));
-		cMat.setSpecular(Vector4f(1.0,1.0,1.0,1));
-		cMat.setShininess(0);
-		cMat.setIllum(4);
 	}
 
 
@@ -34,25 +28,25 @@ namespace EITS{
 		delete []vertex;
 		delete []facet;
 		delete []normal;
-		delete []labelIndex;
+		delete []label_index;
 		delete []color;
 		delete []line;
-		delete []is_selecteded;
+		delete []is_selected;
 	}
 
 	void SurfMesh::newMesh()
 	{
 		this->vertex=new Vector3d[this->num_node+2];
 		this->color=new Vector3f[this->num_node+2];
-		this->labelIndex=new int[this->num_node+2];
+		this->label_index=new int[this->num_node+2];
 		this->facet=new Facet[this->num_facet+2];
 		this->normal=new Vector3d[this->num_normal+2];
-		this->is_selecteded=new bool[this->num_node+2];
+		this->is_selected=new bool[this->num_node+2];
 		this->line=new Line[this->num_line+2];
 
 		for(int i=0;i<num_node+2;i++){
-			is_selecteded[i]=false;
-			labelIndex[i]=-1;
+			is_selected[i]=false;
+			label_index[i]=-1;
 		}
 	}
 
@@ -60,6 +54,7 @@ namespace EITS{
 	{
 		delete []material;
 	}
+
 	void SurfMesh::newMaterial()
 	{
 		this->material=new Material[this->num_material+2];
@@ -73,7 +68,7 @@ namespace EITS{
 		this->is_loaded=false;
 		this->is_view_line_extracted=false;
 		this->is_vertex_color_enabled=false;
-		this->isUseDisplayList=false;
+		this->is_display_list=false;
 		num_node = 0;
 		num_normal = 0;
 		num_facet = 0;
@@ -96,8 +91,8 @@ namespace EITS{
 		num_node++;
 		vertex = (Vector3d*)realloc(vertex, num_node*sizeof(Vector3d));
 		vertex[num_node-1] = _vertex;
-		is_selecteded = (bool*)realloc(is_selecteded, num_node*sizeof(bool));
-		is_selecteded[num_node-1]=false;
+		is_selected = (bool*)realloc(is_selected, num_node*sizeof(bool));
+		is_selected[num_node-1]=false;
 	}
 	void SurfMesh::addNormal(Vector3d &_normal)
 	{
@@ -119,40 +114,31 @@ namespace EITS{
 	}
 	std::ostream& SurfMesh::getInfo(std::ostream &stream)
 	{
-		stream<<"Number of vertex：" << num_node << std::endl;
-		stream<<"Number of normal：" << num_normal << std::endl;
-		stream<<"Number of surface：" << num_facet << std::endl;
-		stream<<"Number of material：" << num_material << std::endl;
+		stream<<"Number of vertices：" << num_node << std::endl;
+		stream<<"Number of normals：" << num_normal << std::endl;
+		stream<<"Number of facets：" << num_facet << std::endl;
+		stream<<"Number of materials：" << num_material << std::endl;
 		return stream;
 	}
 
 	void SurfMesh::calFacetNormal()
 	{
 		Vector3d temp[2];
-	//	if(this->facet[0].normalType==NORMAL_NONE){
-			delete []normal;
-			this->normal=new Vector3d[this->num_facet];
-			for(int i=0;i<num_facet;i++){
-				this->facet[i].normalType=NORMAL_Facet;
-				this->facet[i].num_normal=1;
-				for(int j=1;j<3;j++)
-					temp[j-1]=vertex[facet[i].index_node[j]]-vertex[facet[i].index_node[0]];
-				for(int j=0;j<3;j++){
-					this->normal[i].X[j] =temp[1].X[(j+1)%3]*temp[0].X[(j+2)%3]
-							-temp[1].X[(j+2)%3]*temp[0].X[(j+1)%3];
-				}
-				if(this->normal[i].abs()!=0)this->normal[i]/=this->normal[i].abs();
-				this->facet[i].index_normal[0]=i;
-				this->facet[i].normal[0]=this->normal[i];
+		delete []normal;
+		this->normal=new Vector3d[this->num_facet];
+		for(int i=0;i<num_facet;i++){
+			this->facet[i].normal_type=NORMAL_FACET;
+			this->facet[i].num_normal=1;
+			for(int j=1;j<3;j++)
+				temp[j-1]=vertex[facet[i].index_node[j]]-vertex[facet[i].index_node[0]];
+			for(int j=0;j<3;j++){
+				this->normal[i].X[j] =temp[1].X[(j+1)%3]*temp[0].X[(j+2)%3]
+						-temp[1].X[(j+2)%3]*temp[0].X[(j+1)%3];
 			}
-	//	}
-	/*
-		if(this->facet[0].normalType==NORMAL_POINT){
-			for(int i=0;i<num_facet;i++)
-				for(int j=0;j<facet[i].num_normal;j++)
-					this->facet[i].normal[0]=this->normal[facet[i].index_normal[j]];
+			if(this->normal[i].abs()!=0)this->normal[i]/=this->normal[i].abs();
+			this->facet[i].index_normal[0]=i;
+			this->facet[i].normal[0]=this->normal[i];
 		}
-		*/
 	}
 	void SurfMesh::calFacetVertex()
 	{
@@ -242,10 +228,12 @@ namespace EITS{
 		Tr.setModel2Uni(Tscale*Ttrans);
 	}
 
+	//ファイルフォーマットごとにオーバーロードする
 	bool SurfMesh::load(const char *_filename)
 	{
 		return true;
 	}
+
 	bool SurfMesh::save(const char *_filename)
 	{
 		return true;
@@ -263,14 +251,13 @@ namespace EITS{
 			glEnable(GL_ALPHA_TEST);
 		}
 		glEnable(GL_DEPTH_TEST);
-//		glEnable(GL_LIGHTING);
 
 		glPushMatrix();
 
 		if(is_auto_scale){
 			glMultMatrixd(Tr.getModel2Uni().getTr4GL());
 		}
-		if(this->isUseDisplayList){
+		if(this->is_display_list){
 			if(this->is_listed)
 				glCallList(id);
 			else this->makeDisplayList(0);
@@ -280,7 +267,6 @@ namespace EITS{
 
 		glDisable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
-//		glEnable(GL_LIGHTING);
 	}
 
 	void SurfMesh::renderList()
@@ -292,21 +278,21 @@ namespace EITS{
 			if(this->is_view_label)
 				glDisable(GL_LIGHTING);
 			for ( int i=0; i<num_facet; i++ ){
-				if(facet[i].isEnabled){
+				if(facet[i].is_enabled){
 					cur_mat = facet[i].index_material;
 					if ( pre_mat != cur_mat ){
 						material[cur_mat].set();
 						pre_mat = cur_mat;
 					}
-					if(facet[i].is_selecteded){
-						sMat.set();
+					if(facet[i].is_selected){
+						material_s.set();
 						pre_mat=-1;
 					}
-					if(this->facet[i].normalType==NORMAL_Facet)
+					if(this->facet[i].normal_type==NORMAL_FACET)
 						glNormal3dv(this->normal[this->facet[i].index_normal[0]].X);
 					glBegin(facet[i].type);
 					for ( int j=0; j<facet[i].num_node; j++ ){
-						if(this->facet[i].normalType==NORMAL_POINT)
+						if(this->facet[i].normal_type==NORMAL_POINT)
 							glNormal3dv(this->normal[this->facet[i].index_normal[j]].X);
 						glColor3fv(color[facet[i].index_node[j]].X);
 						p1=Tr.getModel2World()*vertex[facet[i].index_node[j]];
@@ -339,7 +325,7 @@ namespace EITS{
 			for(int i=0;i<num_node;i++){
 				glPushMatrix();
 				glMultMatrixd(Tr.getModel2World().getTr4GL());
-				if(this->is_selected&&this->is_selecteded[i])
+				if(this->is_selected[i])
 					glColor3d(1,0,1);
 				if(this->is_view_label){
 					glColor3fv(color[i].X);
@@ -354,7 +340,7 @@ namespace EITS{
 		}
 	}
 
-	GLuint SurfMesh::makeDisplayList(int _window)
+	GLuint SurfMesh::makeDisplayList(int _id)
 	{
 		id = glGenLists(1);
 		glNewList(id, GL_COMPILE);
@@ -368,7 +354,7 @@ namespace EITS{
 	{
 		Vector3d error;
 		Vector3d minError=Vector3d(1000,1000,1000);
-		int minErrorIndex=-1;
+		int min_error_index=-1;
 		for(int i=0;i<this->num_node;i++){
 			if(!this->is_identity){
 				if(is_auto_scale)
@@ -379,18 +365,16 @@ namespace EITS{
 			else error=this->vertex[i]-_pos;
 			if(error.abs()<minError.abs()&&error.abs()<10){
 				minError=error;
-				minErrorIndex=i;
+				min_error_index=i;
 			}
-			is_selecteded[i]=false;
+			this->is_selected[i]=false;
 		}
-		if(minErrorIndex!=-1){
-			is_selecteded[minErrorIndex]=true;
-			this->selectedVertex=this->vertex[minErrorIndex];
-			this->selectedIndex=minErrorIndex;
-			this->is_selected=true;
+		if(min_error_index!=-1){
+			this->is_selected[min_error_index]=true;
+			this->selected_vertex=this->vertex[min_error_index];
+			this->selected_index=min_error_index;
 		}
-		else this->is_selected=false;
-		return minErrorIndex;
+		return min_error_index;
 	}
 	int SurfMesh::getFacetIndexNear(Vector3d _pos)
 	{
@@ -407,8 +391,8 @@ namespace EITS{
 		}
 		else Pc_o=_pos;
 		for(int i=0;i<this->num_facet;i++){
-			if(facet[i].isEnabled){
-				facet[i].setis_selecteded(false);
+			if(facet[i].is_enabled){
+				facet[i].setIsSelected(false);
 				if(isProjectedPointOnFiniteFace(Pc_o, &facet[i])){
 					dist=getFacePointDistance(Pc_o, facet[i].normal[0], facet[i].vertex[0]);
 					if(mDist>fabs(dist)){
@@ -419,22 +403,22 @@ namespace EITS{
 			}
 		}
 		if(mDistIndex!=-1)
-			facet[mDistIndex].setis_selecteded(true);
+			facet[mDistIndex].setIsSelected(true);
 		return mDistIndex;
 	}
 	void SurfMesh::clearSelection()
 	{
 		for(int i=0;i<num_facet;i++){
-			facet[i].is_selecteded=false;
-			this->is_selecteded[i]=false;
+			facet[i].is_selected=false;
+			this->is_selected[i]=false;
 		}
 	}
 
-	void SurfMesh::quadrization()
+	void SurfMesh::quadrize()
 	{
 		std::cout<<"Quadrizing surface...";
 		for(int i=0;i<this->num_facet;i++)
-			if(this->facet[i].isEnabled)
+			if(this->facet[i].is_enabled)
 				for(int j=0;j<this->num_facet;j++)
 					if(i!=j)
 						convertTriangle2Quad(&this->facet[i],&this->facet[j]);
@@ -454,6 +438,7 @@ namespace EITS{
 		std::cout << "[OK]" << std::endl;
 	}
 	/****************Surface Mesh******************/
+
 
 	/****************Volume Mesh******************/
 	VolumeMesh::VolumeMesh():num_elem(0),num_node(0),num_facet(0),num_line(0)
@@ -732,13 +717,13 @@ namespace EITS{
 		glDisable(GL_DEPTH_TEST );
 	}
 
-	int VolumeMesh::makeDisplayList(int _windowID){
-		int listID;
-		listID = glGenLists(_windowID+1);
-		glNewList(listID, GL_COMPILE);
+	int VolumeMesh::makeDisplayList(int _id){
+		int tid;
+		tid = glGenLists(_id+1);
+		glNewList(tid, GL_COMPILE);
 		this->render();
 		glEndList();
-		return listID;
+		return tid;
 	}
 
 	void VolumeMesh::calLine()
@@ -798,8 +783,6 @@ namespace EITS{
 				t_facet.vertex[1] = node[elem[i].index_node[(j+1)%4]].vertex;
 				t_facet.vertex[2] = node[elem[i].index_node[(j+2)%4]].vertex;
 
-				//std::cout<<t_facet.vertex[0]<<std::endl;
-
 				if(!isSharedFacet(t_facet, this->facet, this->num_facet)){
 					this->num_facet++;
 					t_facet.index_facet = this->num_facet-1;
@@ -850,8 +833,8 @@ namespace EITS{
 
 		Vector3d temp_vertex[4];
 		int temp_index_node[4];
-		int temp_sharedIndex[2];
-		Vector3d temp_sharedVertex[2];
+		int temp_shared_index[2];
+		Vector3d temp_shared_vertex[2];
 		int count=0;
 		Facet temp_facet;
 		temp_facet=*_tri1;
@@ -860,8 +843,8 @@ namespace EITS{
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				if(_tri1->index_node[i]==_tri2->index_node[j]){
-					temp_sharedIndex[count]=_tri1->index_node[i];
-					temp_sharedVertex[count]=_tri1->vertex[i];
+					temp_shared_index[count]=_tri1->index_node[i];
+					temp_shared_vertex[count]=_tri1->vertex[i];
 					count++;
 				}
 			}
@@ -872,7 +855,7 @@ namespace EITS{
 		for(int i=0;i<3;i++){
 			count=0;
 			for(int j=0;j<2;j++){
-				if(_tri1->index_node[i]!=temp_sharedIndex[j])
+				if(_tri1->index_node[i]!=temp_shared_index[j])
 					count++;
 				if(count==2){
 					temp_index_node[0]=_tri1->index_node[i];
@@ -884,7 +867,7 @@ namespace EITS{
 		for(int i=0;i<3;i++){
 			count=0;
 			for(int j=0;j<2;j++){
-				if(_tri2->index_node[i]!=temp_sharedIndex[j])
+				if(_tri2->index_node[i]!=temp_shared_index[j])
 					count++;
 				if(count==2){
 					temp_index_node[2]=_tri2->index_node[i];
@@ -893,10 +876,10 @@ namespace EITS{
 			}
 		}
 		//順番を考慮して一時変数に格納する
-		temp_index_node[1]=temp_sharedIndex[0];
-		temp_index_node[3]=temp_sharedIndex[1];
-		temp_vertex[1]=temp_sharedVertex[0];
-		temp_vertex[3]=temp_sharedVertex[1];
+		temp_index_node[1]=temp_shared_index[0];
+		temp_index_node[3]=temp_shared_index[1];
+		temp_vertex[1]=temp_shared_vertex[0];
+		temp_vertex[3]=temp_shared_vertex[1];
 
 		//ポリゴン種類の変更
 		_tri1->setFacetTypeAsPolygon();
@@ -904,7 +887,7 @@ namespace EITS{
 
 		//値の継承
 		_tri1->index_facet=temp_facet.index_facet;
-		_tri1->normalType=temp_facet.normalType;
+		_tri1->normal_type=temp_facet.normal_type;
 		_tri1->index_material=temp_facet.index_material;
 		memcpy(_tri1->normal,temp_facet.normal,sizeof(Vector3d)*4);
 		memcpy(_tri1->index_normal,temp_facet.index_normal,sizeof(int)*4);
@@ -912,11 +895,11 @@ namespace EITS{
 		memcpy(_tri1->index_node,temp_index_node,sizeof(int)*4);
 
 		_tri2->index_facet=temp_facet.index_facet;
-		_tri2->normalType=temp_facet.normalType;
+		_tri2->normal_type=temp_facet.normal_type;
 		_tri2->index_material=temp_facet.index_material;
 		memcpy(_tri2->normal,temp_facet.normal,sizeof(Vector3d)*4);
 		memcpy(_tri2->index_normal,temp_facet.index_normal,sizeof(int)*4);
-		_tri2->isEnabled=false;
+		_tri2->is_enabled=false;
 		memcpy(_tri2->vertex,temp_vertex,sizeof(Vector3d)*4);
 		memcpy(_tri2->index_node,temp_index_node,sizeof(int)*4);
 
