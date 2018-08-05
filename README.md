@@ -2,17 +2,25 @@ EIT v0.0.0
 ====
 
 <img src="overview.PNG" width="480">
+
 ## Overview
 
 This project is for viewing, editing, and converting 3D models using OpenGL.
 
+## Projects
+
+	MeshFromImage: Create mesh from image or video capture.
+	MeshViewer: Model viewer.
+	VectorMatrix: Vector class sample.
+
 ## Requirement
 
-- LIB: freeglut, tetgen
+- LIB: freeglut, tetgen, opencv
 - PATH: anywhere (default: ../data)
 
 ## Format
-- Supported 3D model format: obj, stl, fem(original)
+
+- Supported 3D model format: obj, stl, fem(original), vox(original)
 
 
 ## Smpale command
