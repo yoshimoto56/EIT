@@ -1,7 +1,8 @@
 EIT v0.0.0
 ====
 
-<img src="overview.PNG" width="480">
+<img src="overview.PNG" height="256"><img src="stl2vox.PNG" height="256">
+
 
 ## Overview
 
@@ -23,7 +24,7 @@ This project is for viewing, editing, and converting 3D models using OpenGL.
 - Supported 3D model format: obj, stl, fem(original), vox(original)
 
 
-## Smpale command
+## Sample command
 
 	load:../data/sample.stl
 	cvt:stl2fem
