@@ -213,6 +213,8 @@ void onClickElectrode(int _event, int _x, int _y, int _flags, void* _data)
 	if (_event == cv::EVENT_LBUTTONUP) {
 		index_electrode_cur = (index_electrode_cur + 1) % num_electrode;
 		num_click++;
+		if(num_click == num_electrode)
+			std::cout << "   : Press any key to save mesh data." << std::endl;
 	}
 	for(int i = 0 ; i < num_electrode; i++){
 		sprintf_s(text,"%d", i);
@@ -246,8 +248,8 @@ bool saveElectrodeSetting(const char* _filename, StlMesh *_stl)
 	for(int i=0;i<_stl->getNumNode();i++){
 		for(int j=0;j<points_electrode.size();j++){
 			if(!is_matching[j]){
-				if(_stl->getVertex(i).x == points_electrode[j].x - size_sheet.width / 2 &&
-					_stl->getVertex(i).y == points_electrode[j].y - size_sheet.height / 2 ){
+				if(_stl->getNode(i).position.x == points_electrode[j].x - size_sheet.width / 2 &&
+					_stl->getNode(i).position.y == points_electrode[j].y - size_sheet.height / 2 ){
 					index_edge[j] = i;
 						is_matching[j] = true;
 						is_used[i] = true;
@@ -279,11 +281,11 @@ bool saveElectrodeSetting(const char* _filename, StlMesh *_stl)
 
 	for(int i=0;i<_stl->getNumNode();i++){
 		if(!is_used[i]){
-			pos_ele.push_back(cv::Vec2d(_stl->getVertex(i).x, _stl->getVertex(i).y));			
+			pos_ele.push_back(cv::Vec2d(_stl->getNode(i).position.x, _stl->getNode(i).position.y));
 			for(pre = 0;pre<pos_electrode.size();pre++){
 				cv::Vec2d dir = pos_ele[pos_ele.size()-1] + cv::Vec2d(size_sheet.width/2,size_sheet.height/2) - pos_electrode[pre]/scale_r2m;
 				if(sqrt(dir.dot(dir)) < size_electrode){
-					t_pos_electrode = cv::Point((_stl->getVertex(i).x + size_sheet.width / 2)*scale_r2m, (_stl->getVertex(i).y + size_sheet.height / 2) * scale_r2m);
+					t_pos_electrode = cv::Point((_stl->getNode(i).position.x + size_sheet.width / 2)*scale_r2m, (_stl->getNode(i).position.y + size_sheet.height / 2) * scale_r2m);
 					Vector3d t_color = color.getColorMapForCV(pre, MAP_JET);
 					cv::circle(img_trim_dst, t_pos_electrode, 4, cv::Scalar(t_color.x, t_color.y, t_color.z), -1);
 					label_ele.push_back(pre);
@@ -432,14 +434,14 @@ int main(int _argc, char *_argv[])
 	cv::resize(img, img_org, size_new);
 	roi_selected = cv::Rect(0, 0, size_sheet_monitor.width, size_sheet_monitor.height);
 
-	std::cout << "STEP 1 : Please click four object's courners on window " << wname_input << std::endl;
+	std::cout << "STEP 1 : Please click four object's courners >> " << wname_input << std::endl;
 	cv::imshow(wname_input, img_resize);
 	cv::setMouseCallback(wname_input, onClickCorner);
 	while (!is_selected_courners) {
 		cv::waitKey(10);
 	}
 
-	std::cout << "STEP 2 : Please drag electrode regoin on the window " << wname_trim << std::endl;
+	std::cout << "STEP 2 : Please drag electrode regoin >> " << wname_trim << std::endl;
 	cv::namedWindow(wname_trim, CV_WINDOW_AUTOSIZE);
 	cv::setMouseCallback(wname_trim, onSelectRegion, (void*)&roi_selected);
 	while (!is_selected_electrodes) {
@@ -502,7 +504,6 @@ int main(int _argc, char *_argv[])
 	stl->deleteMesh();
 	stl->setNumNode(points.size());
 	stl->setNumFacet(triangles.size());
-	stl->setNumNormal(triangles.size());
 	stl->setNumMaterial(triangles.size());
 	stl->setNumLine(3 * triangles.size());
 	stl->newMesh();
@@ -518,9 +519,9 @@ int main(int _argc, char *_argv[])
 			&&vec[0]<=size_sheet.width&&vec[1]<=size_sheet.height
 			&&vec[2]<=size_sheet.width&&vec[3]<=size_sheet.height
 			&&vec[4]<=size_sheet.width&&vec[5]<=size_sheet.height){
-			t_facet.vertex[0] = Vector3d(vec[0]-size_sheet.width/2.0, vec[1]-size_sheet.height/2.0, 0);
-			t_facet.vertex[1] = Vector3d(vec[2]-size_sheet.width/2.0, vec[3]-size_sheet.height/2.0, 0);
-			t_facet.vertex[2] = Vector3d(vec[4]-size_sheet.width/2.0, vec[5]-size_sheet.height/2.0, 0);
+			t_facet.position[0] = Vector3d(vec[0]-size_sheet.width/2.0, vec[1]-size_sheet.height/2.0, 0);
+			t_facet.position[1] = Vector3d(vec[2]-size_sheet.width/2.0, vec[3]-size_sheet.height/2.0, 0);
+			t_facet.position[2] = Vector3d(vec[4]-size_sheet.width/2.0, vec[5]-size_sheet.height/2.0, 0);
 			stl->setFacet(i, t_facet);
 			i++;
 		}

@@ -142,9 +142,9 @@ namespace EITS
 	{
 		Vector3d tCoord[3];
 		for(int j=0;j<_facet->num_node-2;j++){
-			tCoord[0]=_facet->vertex[0];
-			tCoord[1]=_facet->vertex[j+1];
-			tCoord[2]=_facet->vertex[j+2];
+			tCoord[0]=_facet->position[0];
+			tCoord[1]=_facet->position[j+1];
+			tCoord[2]=_facet->position[j+2];
 			if(isViewNodeOnTriangle(_point, _facet->normal[0], tCoord))
 				return true;
 		}
@@ -154,7 +154,7 @@ namespace EITS
 	bool isProjectedPointOnFiniteFace(Vector3d _point, Facet *_facet)
 	{
 		Vector3d pPoint;
-		pPoint=getFacePointProjection(_point, _facet->normal[0], _facet->normal[0], _facet->vertex[0]);	
+		pPoint=getFacePointProjection(_point, _facet->normal[0], _facet->normal[0], _facet->position[0]);	
 		return isViewNodeOnFiniteFace(pPoint,_facet);
 	}
 }

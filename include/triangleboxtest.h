@@ -72,7 +72,7 @@ namespace EITS{
 	public:
 
 		struct TRIANGLE{
-			Vector3d vertex[3];
+			Vector3d position[3];
 			Vector3d normal;
 		}triangle;
 

@@ -47,10 +47,10 @@ namespace EITS
 	void Light::init()
 	{
 		is_on=true;
-		position = Vector4f( 0.0f, 1000.0f, 1000.0f, 1.0f);
-		ambient = Vector4f( 0.2f, 0.2f, 0.2f, 1.0f );
-		diffuse = Vector4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		specular = Vector4f( 0.0f, 0.0f, 0.0f, 1.0f );
+		position = Vector4f( 0.0f, 0.0f, 100.0f, 0.0f);
+		ambient = Vector4f( 0.0f, 0.0f, 0.0f, 0.0f );
+		diffuse = Vector4f( 0.1f, 0.1f, 0.1f, 0.0f );
+		specular = Vector4f( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
 	void Light::set()

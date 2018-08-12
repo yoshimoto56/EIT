@@ -57,7 +57,6 @@ namespace EITS
 		_stl->deleteMaterial();
 		_stl->setNumNode(_obj->getNumNode());
 		_stl->setNumFacet(_obj->getNumFacet());
-		_stl->setNumNormal(_obj->getNumNormal());
 		_stl->setNumMaterial(_obj->getNumMaterial());
 		_stl->setNumLine(_obj->getNumLine());
 		_stl->newMesh();
@@ -65,13 +64,12 @@ namespace EITS
 		for(int i = 0; i < _obj->getNumFacet(); i++){
 			_stl->setFacet(i, _obj->getFacet(i));
 		}
-		for(int i = 0; i < _obj->getNumNormal(); i++){
-			_stl->setNormal(i, _obj->getNormal(i));
-		}
 		for(int i = 0; i < _obj->getNumNode(); i++){
-			_stl->setVertex(i, _obj->getVertex(i));
+			_stl->setNode(i, _obj->getNode(i));
 		}
 		_stl->setup();
+		memcpy(&_stl->is_view, &_obj->is_view, sizeof(IsView));
+		memcpy(&_stl->is_enable, &_obj->is_enable, sizeof(IsEnable));
 
 		std::cout<<"[OK]"<<std::endl;
 		return true;
@@ -85,19 +83,19 @@ namespace EITS
 		_obj->deleteMaterial();
 		_obj->setNumNode(_stl->getNumNode());
 		_obj->setNumFacet(_stl->getNumFacet());
-		_obj->setNumNormal(_stl->getNumNormal());
 		_obj->setNumMaterial(_stl->getNumMaterial());
 		_obj->setNumLine(_stl->getNumLine());
 		_obj->newMesh();
 		_obj->newMaterial();
 		for(int i = 0; i < _stl->getNumFacet(); i++){
 			_obj->setFacet(i, _stl->getFacet(i));
-			_obj->setNormal(i, _stl->getNormal(i));
 		}
-		for(int i = 0; i < _stl->getNumNode(); i++){
-			_obj->setVertex(i, _stl->getVertex(i));
+		for (int i = 0; i < _stl->getNumNode(); i++) {
+			_obj->setNode(i, _stl->getNode(i));
 		}
 		_obj->setup();
+		memcpy(&_obj->is_view, &_stl->is_view, sizeof(IsView));
+		memcpy(&_obj->is_enable, &_stl->is_enable, sizeof(IsEnable));
 
 		std::cout<<"[OK]"<<std::endl;
 		return true;
@@ -163,6 +161,10 @@ namespace EITS
 		}
 		free(argv);
 		_fem->setup();
+		memcpy(&_fem->is_view, &_stl->is_view, sizeof(IsView));
+		memcpy(&_fem->is_enable, &_stl->is_enable, sizeof(IsEnable));
+
+		_fem->getInfo(std::cout);
 
 		std::cout << "[OK]" << std::endl;
 		return true;
@@ -180,7 +182,7 @@ namespace EITS
 		_in->pointlist = new REAL[_in->numberofpoints * 3];
 		for (int i = 0; i<_stl->getNumNode(); i++) {
 			for (int j = 0; j<3; j++) {
-				_in->pointlist[3 * i + j] = _stl->getVertex(i).X[j];
+				_in->pointlist[3 * i + j] = _stl->getNode(i).position.X[j];
 			}
 		}
 		_in->numberoffacets = _stl->getNumFacet();
@@ -214,7 +216,7 @@ namespace EITS
 		_fem->newMesh();
 		for (int i = 0; i< _out->numberofpoints; i++) {
 			for (int j = 0; j<3; j++) {
-				_fem->getNodeAt(i)->vertex.X[j] = _out->pointlist[3 * i + j];
+				_fem->getNodeAt(i)->position.X[j] = _out->pointlist[3 * i + j];
 			}
 		}
 		for (int i = 0; i< _out->numberoftetrahedra; i++) {
@@ -240,11 +242,11 @@ namespace EITS
 		Vector3d Vmin,Vmax;
 		for(int ivp=0;ivp<3;ivp++)
 			for(int dim=0;dim<3;dim++)
-				vp[3*ivp+dim]=_facet->vertex[ivp].X[dim];
-		Wmin=_facet->getMinVertex();
-		Wmax=_facet->getMaxVertex();
-		Vmin=_vox->Tr.getModel2Voxel()*Wmin;
-		Vmax=_vox->Tr.getModel2Voxel()*Wmax;
+				vp[3*ivp+dim]=_facet->position[ivp].X[dim];
+		Wmin = _facet->getMinPosition();
+		Wmax = _facet->getMaxPosition();
+		Vmin = _vox->Tr.getModel2Voxel()*Wmin;
+		Vmax = _vox->Tr.getModel2Voxel()*Wmax;
 		for(j=(int)(Vmin.x-_thickness);j<(int)(Vmax.x+_thickness);j++){
 			if(0<=j&&j<_vox->getWidth()){
 				for(k= (int)(Vmin.y-_thickness);k<(int)(Vmax.y+_thickness);k++){
@@ -275,9 +277,9 @@ namespace EITS
 		Vector3d Vmin,Vmax;
 		for(int ivp=0;ivp<3;ivp++)
 			for(int dim=0;dim<3;dim++)
-				vp[3*ivp+dim]=_facet->vertex[ivp].X[dim];
-		Wmin=_facet->getMinVertex();
-		Wmax=_facet->getMaxVertex();
+				vp[3*ivp+dim]=_facet->position[ivp].X[dim];
+		Wmin=_facet->getMinPosition();
+		Wmax=_facet->getMaxPosition();
 		Vmin=_vox->Tr.getModel2Voxel()*Wmin;
 		Vmax=_vox->Tr.getModel2Voxel()*Wmax;
 		for(j=Vmin.x-_thickness;j<Vmax.x+_thickness;j++){
@@ -312,7 +314,7 @@ namespace EITS
 		if(_vox->getIsLoaded()){
 			for(int i=0;i<num;i++){
 				//まず座標を変換、次にボクセルを参照、ボクセルにフラグを立てる
-				index=_vox->getIndexOfVoxelAt(_obj->Tr.getWorld2Model()*_obj->getVertex(i));
+				index=_vox->getIndexOfVoxelAt(_obj->Tr.getWorld2Model()*_obj->getNode(i).position);
 				if(index!=-1){
 					if(_vox->getColorAt(index).abs()!=0){
 						isCollide=true;
@@ -403,7 +405,7 @@ namespace EITS
 		if(_vox->getIsLoaded()){
 			for(int i=0;i<num;i++){
 				//まず座標を変換、次にボクセルを参照、ボクセルにフラグを立てる
-				index=_vox->getIndexOfVoxelAt(_obj->Tr.getWorld2Model()*_obj->getVertex(i));
+				index=_vox->getIndexOfVoxelAt(_obj->Tr.getWorld2Model()*_obj->getNode(i).position);
 				if(index!=-1)
 					_vox->millingSurfaceWith(index);
 			}
@@ -431,16 +433,17 @@ namespace EITS
 	{
 		Vector3f tcolor;
 		for(int i=0;i<_obj->getNumNode();i++){
-			tcolor.x=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))).x;
-			tcolor.y=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))).y;
-			tcolor.z=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))).z;
+			tcolor.x=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getNode(i).position)).x;
+			tcolor.y=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getNode(i).position)).y;
+			tcolor.z=_vox->getColorAt(_vox->getIndexOfVoxelAt(_obj->getNode(i).position)).z;
 			_obj->setColorAt(i,tcolor);
-			_obj->setLabelIndexAt(i,_vox->getLabelIndexAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))));
+//			_obj->setLabelIndexAt(i,_vox->getLabelIndexAt(_vox->getIndexOfVoxelAt(_obj->getVertex(i))));
 		}
 	}
 
 	void setLabelOBJNearest(ObjMesh *_obj)
 	{
+		/*
 		double mdist;
 		for(int i=0;i<_obj->getNumNode();i++){
 			mdist=1000;
@@ -455,7 +458,7 @@ namespace EITS
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	/*
@@ -493,7 +496,7 @@ namespace EITS
 
 			//位置合わせを行う点群を設定
 			for(int i=0;i<numPoint;i++)
-				pointA[i]=_objA->Tr.getWorld2Model()*_objA->getVertex(i);
+				pointA[i]=_objA->Tr.getWorld2Model()*_objA->getNode(i).position;
 
 			//最近傍探索点を取得
 			ICP::matching(numPoint, pointA, pointB, _objB, _mode);
@@ -524,7 +527,7 @@ namespace EITS
 		double dist=0;
 		double mDist=INT_MAX;
 		Vector3d normal;
-		Vector3d vertex;
+		Vector3d position;
 		for(int i=0;i<_num_point;i++){
 			if(_mode==ICP2P){//点と点の場合
 				for(int j=0;j<_objB->getNumNode();j++){
@@ -534,11 +537,11 @@ namespace EITS
 				mDist=INT_MAX;
 				for(int j=0;j<_objB->getNumFacet();j++){
 					normal=_objB->getFacetPointer(j)->normal[0];
-					vertex=_objB->getFacetPointer(j)->vertex[0];
-					dist=getFacePointDistance(_pointA[i],normal,vertex);
+					position=_objB->getFacetPointer(j)->position[0];
+					dist=getFacePointDistance(_pointA[i],normal,position);
 					if(mDist>dist){
 						mDist=dist;
-						_pointB[i]=getFacePointProjection(_pointA[i], normal, vertex);
+						_pointB[i]=getFacePointProjection(_pointA[i], normal, position);
 					}
 				}
 			}
@@ -551,7 +554,7 @@ namespace EITS
 		double max=0;
 		double min=INT_MAX;
 		for(int i=0;i<_objA->getNumNode();i++){
-			_error[i]=(_pointB[i]-_objA->Tr.getWorld2Model()*_objA->getVertex(i)).abs();
+			_error[i]=(_pointB[i]-_objA->Tr.getWorld2Model()*_objA->getNode(i).position).abs();
 			if(max<_error[i])
 				max=_error[i];
 			if(min>_error[i])

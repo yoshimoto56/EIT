@@ -8,29 +8,27 @@ namespace EITS
 		char *strings = NULL;
 		char *dir;
 		dir = new char [strlen(filename)+1];
-		strcpy_s(dir, sizeof(dir), filename);
+		strcpy_s(dir, sizeof(char)*(strlen(filename) + 1), filename);//TODO error
 		if ( strings = strrchr(dir, '/' ) ) strings[1] = '\0';
 		else if ( strings = strrchr(dir, '\\') ) strings[1] ='\0';
 		else dir[0] = '\0';
-		strcpy_s(dest, sizeof(dest), dir);
+		strcpy_s(dest, sizeof(char)*(strlen(filename) + 1), dir);
 		return dest;
 	}
 	bool ObjMesh::loadOBJFile(const char *filename)
 	{
 		std::ifstream file;
 		int cvi = -1;
-		int cni = -1;
 		int cfi = -1;
 		int cmi =  0;
 		int tmp_int;
 		char tmp_char[256];
 		char buf[256];
 		char *pbuf;
-		Vector3d tp;
+		Node t_node;
 		strcpy_s(filename_obj, filename);
 		file.open(filename, std::ios::in);
 		if ( !file.is_open() ){
-	//		std::cout << "[FAIL]" << std::endl;
 			return false;
 		}
 		this->clearMesh();
@@ -40,7 +38,6 @@ namespace EITS
 			file.getline(buf, sizeof(buf));
 			if(strstr(buf, "of "));
 			else if(strstr(buf, "v "))this->num_node++;
-			else if(strstr(buf, "vn "))this->num_normal++;
 			else if(strstr(buf, "f "))this->num_facet++;
 			else if(strstr(buf, "mtllib ")){
 				sscanf_s(buf, "mtllib %s", &tmp_char, 256);
@@ -49,7 +46,7 @@ namespace EITS
 					return false;
 			}
 		}
-		this->num_line=num_facet*4;
+		this->num_line = num_facet * 4;
 		this->newMesh();
 		file.clear();
 		file.seekg(0, std::fstream::beg);
@@ -57,21 +54,14 @@ namespace EITS
 			file.getline(buf, sizeof(buf));
 			if(strstr(buf, "v ")){
 				cvi++;
-				if ( sscanf_s(buf, "v %lf %lf %lf",&tp.x, &tp.y, &tp.z) == 3 ){
-					if ( sscanf_s(buf, "v %lf %lf %lf %f %f %f",&tp.x, &tp.y, &tp.z, &color[cvi].x, &color[cvi].y, &color[cvi].z) == 6 ){
-						this->is_vertex_color_enabled=true;
+				if ( sscanf_s(buf, "v %lf %lf %lf",&t_node.position.x, &t_node.position.y, &t_node.position.z) == 3 ){
+					if ( sscanf_s(buf, "v %lf %lf %lf %f %f %f",&t_node.position.x, &t_node.position.y, &t_node.position.z, &color[cvi].x, &color[cvi].y, &color[cvi].z) == 6 ){
+						this->is_enable.vertex_color = true;
+						t_node.color = color[cvi];
 					}
-					this->vertex[cvi]=tp;
+					this->node[cvi]= t_node;
 				}
 				else {
-//					std::cout << "[FAIL]"<<std::endl;
-					return false;
-				}
-			}
-			else if(strstr(buf, "vn")){
-				cni++;
-				if ( sscanf_s(buf, "vn %lf %lf %lf", &this->normal[cni].x, &this->normal[cni].y, &this->normal[cni].z) != 3){
-//					std::cout << "[FAIL]"<<std::endl;
 					return false;
 				}
 			}
@@ -84,7 +74,6 @@ namespace EITS
 					pbuf++;
 				}
 				if ( this->facet[cfi].num_node < 3 ){
-//					std::cout << "[FAIL]" << std::endl;
 					return false;
 				}
 				else if ( this->facet[cfi].num_node ==3){
@@ -94,7 +83,6 @@ namespace EITS
 					this->facet[cfi].setFacetTypeAsPolygon(this->facet[cfi].num_node);
 				}
 				else{
-//					std::cout << "[FAIL]" << std::endl;
 					return false;
 				}
 				pbuf = buf;
@@ -116,7 +104,7 @@ namespace EITS
 						}
 					}
 					else{
-						this->facet[cfi].normal_type = NORMAL_POINT;
+						this->facet[cfi].normal_type = NORMAL_NODE;
 					}
 					this->facet[cfi].index_node[i]--;
 					this->facet[cfi].index_facet = cfi;
@@ -147,9 +135,7 @@ namespace EITS
 		Material _mat;
 		strcpy_s(filename_mtl, filename); 
 		file.open(filename, std::ios::in);
-		if ( !file.is_open() )
-		{
-//			std::cout << "Error 0: File open error!" << std::endl;
+		if ( !file.is_open() ){
 			return false;
 		}
 		this->num_material=0;
@@ -218,14 +204,14 @@ namespace EITS
 
 	bool ObjMesh::load(const char *_filename)
 	{
-		std::cout <<"Loading .obj data ...";
+		std::cout << "Loading .obj data ...";
 		getDirectoryName(_filename, directoryname);
-		if ( !loadOBJFile(_filename) ){
-			std::cout <<"[FAIL]"<< std::endl;
+		if (!loadOBJFile(_filename)) {
+			std::cout << "[FAIL]" << std::endl;
 			return false;
 		}
 		this->setup();
-		std::cout <<"[OK]"<< std::endl;
+		std::cout << "[OK]" << std::endl;
 		return true;
 	}
 	void ObjMesh::setup()
@@ -236,6 +222,6 @@ namespace EITS
 		this->calScale();
 		this->calTransform();
 		this->calLine();
-		this->is_loaded=true;
+		this->is_loaded = true;
 	}
 }

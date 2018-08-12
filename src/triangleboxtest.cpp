@@ -6,7 +6,7 @@ namespace EITS
 	void AABBtest::setData(double _box_size, double *_box_center, double *_triangle_vertex){
 		voxel.size=Vector3d(_box_size,_box_size,_box_size);
 		voxel.center=Vector3d(_box_center);
-		for(i=0;i<3;i++)triangle.vertex[i]=Vector3d(&_triangle_vertex[i*3]);
+		for(i=0;i<3;i++)triangle.position[i]=Vector3d(&_triangle_vertex[i*3]);
 	}
 
 	int AABBtest::planeBoxOverlap(double d)
@@ -45,7 +45,7 @@ namespace EITS
 		/* This is the fastest branch on Sun */
 		/* move everything so that the boxcenter is in (0,0,0) */
 		for(i=0;i<3;i++) 
-		   v[i]=triangle.vertex[i]-voxel.center;
+		   v[i]=triangle.position[i]-voxel.center;
 
 		/* compute triangle edges */
 		for(i=0;i<3;i++) 

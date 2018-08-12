@@ -12,6 +12,7 @@
 #include <objhandler.h>
 #include <voxelhandler.h>
 #include <modelhandler.h>
+#include <interface.h>
 
 EITS::GLHandler *gl;
 EITS::StlMesh *stl;
@@ -44,7 +45,7 @@ void thread1(LPVOID pParam)
 			sscanf_s(command,"load:%s", t_filename, 256);
 			if(strstr(command,".stl")){
 				if(stl->load(t_filename)){
-					//stl->centerize();
+					stl->centerize();
 					stl->getInfo(std::cout);
 				}
 			}
@@ -90,7 +91,7 @@ void thread1(LPVOID pParam)
 			}
 			else if (strstr(command, ".slice")) {
 				int t_axis;
-				sscanf_s(command, "save:%d:%s", &t_axis, t_filename, sizeof(t_filename));
+				sscanf_s(command, "save:%d:%s", &t_axis, t_filename, (unsigned int)sizeof(t_filename));
 				if (t_axis == EITS::X_AXIS || t_axis == EITS::Y_AXIS || t_axis == EITS::Z_AXIS)
 					vox->saveSlice(t_filename, t_axis);
 				else {
@@ -198,6 +199,7 @@ void object()
 	if(gl->getIsRun()){
 		obj->render();
 		stl->render();
+		fem->render();
 		vox->render();
 		vox->renderGuid();
 		vox->renderSlicer();
@@ -206,7 +208,10 @@ void object()
 
 void selectObject(EITS::Vector3d *_selected_coord, int _mode)
 {
-	//stl->select(_selected_coord, _mode);
+	EITS::select(_selected_coord, _mode, EITS::SELECT_NODE, stl);
+	EITS::select(_selected_coord, _mode, EITS::SELECT_FACET, stl);
+
+//	stl->select(_selected_coord, _mode);
 }
 
 int main(int _argc, char *_argv[])
@@ -223,6 +228,9 @@ int main(int _argc, char *_argv[])
 	gl->getObject()->setObject(object);
 	gl->getObject()->setSelectObject(selectObject);
 	gl->setIsViewGrid(true);
+
+//	fem->is_view.label = true;
+//	fem->is_view.facet = false;
 
 	HANDLE hMutex;
 	HANDLE hThread[2];

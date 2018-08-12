@@ -48,8 +48,8 @@ namespace EITS
 		camera[4].setTrans(GL_CAMERA_INIPOS);
 		camera[5].init(CAM_FRONT);
 
-		light[1].setPosition(Vector4f( 0, 1000.0, 0, 1.0 ));
-		light[2].setPosition(Vector4f( 0, 1000.0, -1000.0, 1.0 ));
+		light[1].setPosition(Vector4f( 0, 100.0, 0, 1.0 ));
+		light[2].setPosition(Vector4f( 0, 100.0, -100.0, 1.0 ));
 		glutInit(_argc,_argv);
 	}
 
@@ -177,7 +177,7 @@ namespace EITS
 		static double sx,sy;
 		if(_button==GLUT_RIGHT_BUTTON && _state==GLUT_UP){
 			select.setIsDrawSelectRegion(true);
-			Vector3d selectedCoord[8];
+			Vector3d selectedCoord[9];
 			pos_world=returnWorldCo(Vector3d(sx,sy,0));
 			selectedCoord[0]=pos_world;
 			pos_world=returnWorldCo(Vector3d(sx,_y,0));
@@ -194,6 +194,9 @@ namespace EITS
 			selectedCoord[6]=pos_world;
 			pos_world=returnWorldCo(Vector3d(_x,sy,1));
 			selectedCoord[7]=pos_world;
+			pos_world = returnWorldCo(Vector3d(_x, _y, returnDepth(_x, _y)));
+			selectedCoord[8] = pos_world;
+
 			object->selectObject(selectedCoord, key);
 		}
 		if(_button==GLUT_RIGHT_BUTTON && _state==GLUT_DOWN){

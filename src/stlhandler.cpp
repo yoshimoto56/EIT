@@ -41,7 +41,7 @@ namespace EITS
 	{
 		int temp_count_facet = 0;
 		std::ifstream file;
-		Facet sample;
+		Facet t_facet;
 		char buf[256];
 		char dummy[256];
 		char dummy2[256];
@@ -51,38 +51,33 @@ namespace EITS
 		this->num_facet=0;
 		while (!file.eof()){
 			file.getline(buf, sizeof(buf));
-//			if(strstr(buf, "vertex"))this->num_node++;
 			if(strstr(buf, "normal"))this->num_facet++;
 		}
-		this->num_normal = this->num_facet;
 		this->num_node = this->num_facet * 3;
 		this->num_material=1;
 		this->deleteMesh();
 		this->deleteMaterial();
 		this->newMesh();
 		this->newMaterial();
-		sample.setFacetTypeAsTriangle();
+		t_facet.setFacetTypeAsTriangle();
 		file.clear();
 		file.seekg(0, std::fstream::beg);
 		while (!file.eof()){
 			file.getline(buf, sizeof(buf));
 			if (strstr(buf, "normal")) {
-				sscanf_s(buf, "%s %s %lf %lf %lf", dummy, 256, dummy2, 256, &sample.normal[0].x, &sample.normal[0].y, &sample.normal[0].z);
+				sscanf_s(buf, "%s %s %lf %lf %lf", dummy, 256, dummy2, 256, &t_facet.normal[0].x, &t_facet.normal[0].y, &t_facet.normal[0].z);
 			}
 			else if(strstr(buf, "vertex")){
-					sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &sample.vertex[0].x,&sample.vertex[0].y,&sample.vertex[0].z);
-					file.getline(buf, sizeof(buf));
-					sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &sample.vertex[1].x,&sample.vertex[1].y,&sample.vertex[1].z);
-					file.getline(buf, sizeof(buf));
-					sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &sample.vertex[2].x,&sample.vertex[2].y,&sample.vertex[2].z);
-					sample.index_facet=temp_count_facet;
-					sample.normal_type=NORMAL_FACET;
-					this->facet[temp_count_facet]=sample;
-					sample.index_normal[0]=temp_count_facet;
-					sample.index_normal[0]=temp_count_facet;
-					sample.index_normal[0]=temp_count_facet;
-					normal[temp_count_facet]=sample.normal[0];
-					temp_count_facet++;
+				sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &t_facet.position[0].x, &t_facet.position[0].y, &t_facet.position[0].z);
+				file.getline(buf, sizeof(buf));
+				sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &t_facet.position[1].x, &t_facet.position[1].y, &t_facet.position[1].z);
+				file.getline(buf, sizeof(buf));
+				sscanf_s(buf, "%s %lf %lf %lf", dummy, 256, &t_facet.position[2].x, &t_facet.position[2].y, &t_facet.position[2].z);
+				t_facet.index_facet = temp_count_facet;
+				t_facet.normal_type = NORMAL_FACET;
+				t_facet.normal[0] = temp_count_facet;
+				this->facet[temp_count_facet] = t_facet;
+				temp_count_facet++;
 			}
 		}
 		file.close();
@@ -91,46 +86,42 @@ namespace EITS
 	}
 	bool StlMesh::loadBinary(const char* _filename)
 	{
-		int count=0;
+		int count = 0;
 		float *pf;
 		int *pd;
 		std::ifstream file;
-		Facet sample;
+		Facet t_facet;
 		char buf[256];
 		file.open(_filename, std::ios::in|std::ios::binary);
 		if (!file.is_open())return false;
 		file.read(buf,84);
 		pd = (int *)&buf[80];
-		this->num_facet=*pd;
-		this->num_normal=this->num_facet;
-		this->num_node=3*this->num_facet;
+		this->num_facet = *pd;
+		this->num_node = 3 * this->num_facet;
 		this->num_material = 1;
 		this->deleteMesh();
 		this->deleteMaterial();
 		this->newMesh();
 		this->newMaterial();
-		sample.setFacetTypeAsTriangle();
+		t_facet.setFacetTypeAsTriangle();
 		while (file.read(buf,50)){
-				pf = (float *)buf;
-				sample.normal[0].x=*(pf+ 0);
-				sample.normal[0].y=*(pf+ 1);
-				sample.normal[0].z=*(pf+ 2);
-				sample.vertex[0].x=*(pf+ 3);
-				sample.vertex[0].y=*(pf+ 4);
-				sample.vertex[0].z=*(pf+ 5);
-				sample.vertex[1].x=*(pf+ 6);
-				sample.vertex[1].y=*(pf+ 7);
-				sample.vertex[1].z=*(pf+ 8);
-				sample.vertex[2].x=*(pf+ 9);
-				sample.vertex[2].y=*(pf+10);
-				sample.vertex[2].z=*(pf+11);
-				sample.index_facet=count;
-				sample.index_normal[0]=count;
-				sample.index_normal[0]=count;
-				sample.index_normal[0]=count;
-				normal[count]=sample.normal[0];
-				facet[count]=sample;
-				count++;
+			pf = (float *)buf;
+			t_facet.normal[0].x = *(pf + 0);
+			t_facet.normal[0].y = *(pf + 1);
+			t_facet.normal[0].z = *(pf + 2);
+			t_facet.position[0].x = *(pf + 3);
+			t_facet.position[0].y = *(pf + 4);
+			t_facet.position[0].z = *(pf + 5);
+			t_facet.position[1].x = *(pf + 6);
+			t_facet.position[1].y = *(pf + 7);
+			t_facet.position[1].z = *(pf + 8);
+			t_facet.position[2].x = *(pf + 9);
+			t_facet.position[2].y = *(pf + 10);
+			t_facet.position[2].z = *(pf + 11);
+			t_facet.index_facet = count;
+			t_facet.index_normal[0] = count;
+			facet[count] = t_facet;
+			count++;
 		}
 
 		file.close();
@@ -162,7 +153,7 @@ namespace EITS
 			file<<"	facet normal "<<this->facet[i].normal[0].x<<" "<<this->facet[i].normal[0].y<<" "<<this->facet[i].normal[0].z<<std::endl;
 			file<<"		outer loop"<<std::endl;		
 			for(int j=0;j<3;j++)
-				file<<"			vertex "<<this->facet[i].vertex[j].x<<" "<<this->facet[i].vertex[j].y<<" "<<this->facet[i].vertex[j].z<<std::endl;
+				file<<"			vertex "<<this->facet[i].position[j].x<<" "<<this->facet[i].position[j].y<<" "<<this->facet[i].position[j].z<<std::endl;
 			file<<"		endloop"<<std::endl;		
 			file<<"	endfacet"<<std::endl;		
 		}
@@ -190,7 +181,7 @@ namespace EITS
 			}
 			for(int j=0;j<3;j++){
 				for(int k=0;k<3;k++){
-					temp_data=this->facet[i].vertex[j].X[k];
+					temp_data=this->facet[i].position[j].X[k];
 					file.write((char*)&temp_data,4);
 				}
 			}
@@ -201,7 +192,7 @@ namespace EITS
 	}
 	void StlMesh::setup()
 	{
-		this->calVertex();
+		this->calNode();
 		this->calFacetNormal();
 		this->calCenter();
 		this->calScale();

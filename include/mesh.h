@@ -10,45 +10,77 @@
 #include <glutilities.h>
 #include <pointlineface.h>
 
-#define NUM_VERTEX_MAX 6
+#define NUM_POSITION_MAX 6
+
+//COLOR SETTINGS
+#define GL_COLOR_SELECTED glColor3d(0.1, 1.0, 0.1)
+#define COLOR_SELECTED Vector4f(0.1, 1.0, 0.1, 0.0)
+#define COLOR_NODE_DEFAULT Vector3f(0.1, 0.5, 0.5)
+#define COLOR_LINE_DEFAULT Vector3f(0.1, 0.1, 0.1)
+#define COLOR_FACET_DEFAULT Vector3f(0.1, 0.1, 1.0)
+
 
 namespace EITS{
 
 	enum SELECT_MESH{
 		SELECT_NONE,
-		SELECT_FACET,
+		SELECT_NODE,
 		SELECT_LINE,
-		SELECT_POINT
+		SELECT_FACET
 	};
 
 	enum NORMAL_TYPE{
 		NORMAL_NONE,
+		NORMAL_NODE,
 		NORMAL_FACET,
-		NORMAL_POINT
 	};
+
+	enum COLOR_TYPE {
+		COLOR_NONE,
+		COLOR_FACET,
+		COLOR_NODE
+	};
+
+	typedef struct{
+		bool object;
+		bool line;
+		bool node;
+		bool facet;
+		bool element;
+		bool label;
+	}IsView;
+
+	typedef struct {
+		bool auto_trans;
+		bool alpha_blend;
+		bool display_list;
+		bool vertex_color;
+	}IsEnable;
 
 	class Node{
 	public:
 		Node(){this->clear();}
 		~Node(){}
 		Node &operator = (const Node &_node){
-			memcpy(&vertex, &_node.vertex, sizeof(Vector3d));
+			memcpy(&position, &_node.position, sizeof(Vector3d));
 			memcpy(&normal, &_node.normal, sizeof(Vector3d));
 			index = _node.index;
 			state = _node.state;
 			is_selected = _node.is_selected;
 			return (*this);
 		}
-		//ノードの番号
+		//Node index
 		int index;
-		//ノードの状態
+		//State
 		int state;
-		//ノードのラベル
+		//Label
 		int label;
-		//座標
-		Vector3d vertex;
-		//法線
+		//Coordinate
+		Vector3d position;
+		//Vertex normal
 		Vector3d normal;
+		//Vertex color;
+		Vector3f color;
 		//Selection interface
 		bool is_selected;
 
@@ -56,47 +88,70 @@ namespace EITS{
 			this->index = -1;
 			this->state = 0;
 			this->label = -1;
-			this->vertex = Vector3d(0,0,0);
-			this->normal = Vector3d(0,0,0);
+			this->position = Vector3d(0,0,0);
+			this->normal = Vector3d(0, 0, 0);
+			this->color = COLOR_NODE_DEFAULT;
 			this->is_selected = false;
+		}
+		void render() {
+			if (this->is_selected)
+				GL_COLOR_SELECTED;
+			else{
+				glColor3fv(color.X);
+			}
+			glBegin(GL_POINTS);
+			glVertex3dv(position.X);
+			glEnd();
 		}
 	};
 
 	class Line
 	{
 	public:
-		Line(){is_selected=false;}
+		Line(){
+			is_selected = false;
+			color = COLOR_LINE_DEFAULT;
+		}
 		~Line(){}
 		bool is_selected;
-		Vector3d vertex[2];
+		Vector3f color;
+		Vector3d position[2];
 		int index_node[2];
 		Line &operator = (const Line &_line){
-			memcpy(vertex,_line.vertex,sizeof(Vector3d)*2);
-			memcpy(index_node,_line.index_node,sizeof(int)*2);
-			is_selected=_line.is_selected;
+			memcpy(position, _line.position, sizeof(Vector3d) * 2);
+			memcpy(index_node, _line.index_node, sizeof(int) * 2);
+			this->is_selected = _line.is_selected;
+			this->color = _line.color;
 			return (*this);
 		}
 		void render(){
+			if (this->is_selected)
+				GL_COLOR_SELECTED;
+			else {
+				glColor3fv(color.X);
+			}
 			glBegin(GL_LINE_STRIP);
-			glVertex3dv(this->vertex[0].X);	
-			glVertex3dv(this->vertex[1].X);	
+			glVertex3dv(this->position[0].X);	
+			glVertex3dv(this->position[1].X);	
 			glEnd();		
 		}
-		double getLength(){return (vertex[0]-vertex[1]).abs();}
+		double getLength(){return (position[0]-position[1]).abs();}
 	};
 
 	class Facet
 	{
 	public:
 		GLenum type;
-
-		Line line[NUM_VERTEX_MAX];
-		int index_node[NUM_VERTEX_MAX];
-		int index_normal[NUM_VERTEX_MAX];
-		Vector3d vertex[NUM_VERTEX_MAX];
-		Vector2d vertex_local[NUM_VERTEX_MAX];
-		Vector3d normal[NUM_VERTEX_MAX];
-
+		int normal_type;
+		int color_type;
+		Line line[NUM_POSITION_MAX];
+		int index_node[NUM_POSITION_MAX];
+		int index_normal[NUM_POSITION_MAX];
+		Vector3d position[NUM_POSITION_MAX];
+		Vector2d position_local[NUM_POSITION_MAX];
+		Vector3d normal[NUM_POSITION_MAX];
+		Vector3f color[NUM_POSITION_MAX];
+		Material material;
 		bool is_selected;
 		bool is_enabled;
 		int index_facet;
@@ -105,95 +160,117 @@ namespace EITS{
 		int num_normal;
 		int num_line;
 		int index_elem;
-
 		Vector3d min;
 		Vector3d max;
-		//面積
 		double area;
-
-		int normal_type;
 		Facet &operator = (const Facet &_facet){
-			type=_facet.type;
-			this->is_selected=_facet.is_selected;
-			this->is_enabled=_facet.is_enabled;
-			index_facet=_facet.index_facet;
-			index_material=_facet.index_material;
-			num_node=_facet.num_node;
-			num_line=_facet.num_line;
-			num_normal=_facet.num_normal;
+			type = _facet.type;
+			this->is_selected = _facet.is_selected;
+			this->is_enabled = _facet.is_enabled;
+			index_facet = _facet.index_facet;
+			index_material = _facet.index_material;
+			num_node = _facet.num_node;
+			num_line = _facet.num_line;
+			num_normal = _facet.num_normal;
 			normal_type = _facet.normal_type;
+			color_type = _facet.color_type;
 			index_elem = _facet.index_elem;
 			area = _facet.area;
-			memcpy(index_node,_facet.index_node,sizeof(int)*num_node);
-			memcpy(vertex,_facet.vertex,sizeof(Vector3d)*num_node);
-			memcpy(index_normal,_facet.index_normal,sizeof(int)*num_normal);
-			memcpy(normal,_facet.normal,sizeof(Vector3d)*num_normal);
-			memcpy(line,_facet.line,sizeof(Line)*num_line);
+			memcpy(index_node, _facet.index_node, sizeof(int)*num_node);
+			memcpy(position, _facet.position, sizeof(Vector3d)*num_node);
+			memcpy(index_normal, _facet.index_normal, sizeof(int)*num_normal);
+			memcpy(normal, _facet.normal, sizeof(Vector3d)*num_normal);
+			memcpy(line, _facet.line, sizeof(Line)*num_line);
+			memcpy(color, _facet.color, sizeof(Vector3f)*num_line);
 			return (*this);
 		}
-		Facet(GLenum _type=GL_TRIANGLES, int _num_node=0,	int _normal_type=NORMAL_POINT) 
+		Facet(GLenum _type=GL_TRIANGLES, int _num_node=0,	int _normal_type=NORMAL_NODE) 
 			: type(_type), num_node(_num_node), num_normal(_num_node), normal_type(_normal_type),is_selected(false)
-			,is_enabled(true),index_material(0),num_line(0){
+			,color_type(COLOR_FACET),is_enabled(true),index_material(0),num_line(0){
 				this->setFacetTypeAsTriangle();
+				this->color[0] = COLOR_FACET_DEFAULT;
 		}
 		~Facet(){
 		}
 		void setFacetTypeAsTriangle(){
-			type=GL_TRIANGLES;
-			num_node=3;
-			num_line=3;
-			num_normal=3;
-			index_material=0;
+			type = GL_TRIANGLES;
+			num_node = 3;
+			num_line = 3;
+			num_normal = 3;
+			index_material = 0;
 		}
 		void setFacetTypeAsPolygon(int _num=4){
-			if(_num<NUM_VERTEX_MAX){
-				type=GL_POLYGON;
-				num_node=_num;
-				num_line=_num;
-				num_normal=_num;
-				index_material=0;
+			if(_num<NUM_POSITION_MAX){
+				type = GL_POLYGON;
+				num_node = _num;
+				num_line = _num;
+				num_normal = _num;
+				index_material = 0;
 			}
 		}
-		Vector3d getMinVertex(){
-			min=Vector3d(INT_MAX,INT_MAX,INT_MAX);
-			for(int i=0;i<num_node;i++){
-				if(min.x>vertex[i].x)min.x=vertex[i].x;
-				if(min.y>vertex[i].y)min.y=vertex[i].y;
-				if(min.z>vertex[i].z)min.z=vertex[i].z;
+		Vector3d getMinPosition(){
+			min = Vector3d(INT_MAX, INT_MAX, INT_MAX);
+			for (int i = 0;i<num_node;i++) {
+				if (min.x>position[i].x)min.x = position[i].x;
+				if (min.y>position[i].y)min.y = position[i].y;
+				if (min.z>position[i].z)min.z = position[i].z;
 			}
 			return min;
 		}
-		Vector3d getMaxVertex(){
-			max=Vector3d(-INT_MAX,-INT_MAX,-INT_MAX);
-			for(int i=0;i<num_node;i++){
-				if(max.x<vertex[i].x)max.x=vertex[i].x;
-				if(max.y<vertex[i].y)max.y=vertex[i].y;
-				if(max.z<vertex[i].z)max.z=vertex[i].z;
+		Vector3d getMaxPosition(){
+			max = Vector3d(-INT_MAX, -INT_MAX, -INT_MAX);
+			for (int i = 0;i<num_node;i++) {
+				if (max.x<position[i].x)max.x = position[i].x;
+				if (max.y<position[i].y)max.y = position[i].y;
+				if (max.z<position[i].z)max.z = position[i].z;
 			}
 			return max;
 		}
-		bool getIsSelected(){return this->is_selected;}
-		void setIsSelected(bool _is_selected){is_selected=_is_selected;}
-		void calVertexLocal(){
-			Vector3d e1 = (this->vertex[1] - this->vertex[0])/(this->vertex[1] - this->vertex[0]).abs();
+		void calPositionLocal(){
+			Vector3d e1 = (this->position[1] - this->position[0])/(this->position[1] - this->position[0]).abs();
 			Vector3d e2 = e1 % this->normal[0];
 			e2 /=e2.abs();
-			this->vertex_local[0] = Vector2d(0, 0);
-			this->vertex_local[1] = Vector2d(e1*(this->vertex[1] - this->vertex[0]), e2*(this->vertex[1] - this->vertex[0]));
-			this->vertex_local[2] = Vector2d(e1*(this->vertex[2] - this->vertex[0]), e2*(this->vertex[2] - this->vertex[0]));
+			this->position_local[0] = Vector2d(0, 0);
+			this->position_local[1] = Vector2d(e1*(this->position[1] - this->position[0]), e2*(this->position[1] - this->position[0]));
+			this->position_local[2] = Vector2d(e1*(this->position[2] - this->position[0]), e2*(this->position[2] - this->position[0]));
 		}
 		Matrixd calArea(){
-			this->calVertexLocal();
+			this->calPositionLocal();
 			Matrixd result(3, 3);
 			Matrixd temp(3, 3);
 			for(int i = 0;i < 3;i++){
 				for(int j = 0;j < 3;j++){
 					if(j == 0)temp.X[3 * i + j] = 1;
-					else temp.X[3 * i + j] = this->vertex_local[i].X[ j - 1];
+					else temp.X[3 * i + j] = this->position_local[i].X[ j - 1];
 				}
 			}
 			this->area = fabs(inverseLU(result.X, temp.X, 3)) / 2.0;
 			return result;
+		}
+		void render() {
+			if (this->normal_type == NORMAL_FACET)
+				glNormal3dv(this->normal[0].X);
+			if (this->color_type == COLOR_FACET) {
+				if (this->is_selected)
+					GL_COLOR_SELECTED;
+				else {
+					glColor3fv(color[0].X);
+				}
+			}
+			glBegin(this->type);
+			for (int j = 0; j < this->num_node; j++) {
+				if (this->normal_type == NORMAL_NODE)
+					glNormal3dv(normal[j].X);
+				if (this->color_type == COLOR_NODE) {
+					if (this->is_selected)
+						GL_COLOR_SELECTED;
+					else {
+						glColor3fv(color[j].X);
+					}
+				}
+				glVertex3dv(this->position[j].X);
+			}
+			glEnd();
 		}
 	};
 
@@ -277,55 +354,37 @@ namespace EITS{
 	{
 	protected:
 		int num_node;
-		int num_normal;
 		int num_facet;
 		int num_line;
 		int num_material;
 
-		Vector3d *vertex;
-		Vector3d *normal;
 		Facet *facet;
 		Line *line;
+		Node *node;
 		Material *material;
-		Material material_s;
-		Material material_c;
 		Vector3f *color;
 
-		int *label_index;
-		bool *is_selected;
+		Material material_selected;
+		bool is_selected;
 
 		double scale;
 		Vector3d size;
 		Vector3d center;
-		Vector3d selected_vertex;
-		int selected_index;
 
 		GLuint id;
-		bool is_display_list;
 		bool is_listed;
 		bool is_loaded;
-		bool is_view;
-		bool is_view_line;
-		bool is_view_node;
-		bool is_view_facet;
-		bool is_auto_scale;
-		bool is_tri;
-		bool is_identity;
-		bool is_view_label;
-		bool is_alpha_blend;
-		bool is_view_line_extracted;
-		bool is_vertex_color_enabled;
+		bool is_line_extracted;
 
 		void calFacetNormal();
 		void calFacetVertex();
 		void calLine();
-		void calVertex();
+		void calNode();
 		void calCenter();
 		void calScale();
 		void calTransform();
 
-		void addVertex(Vector3d &_vertex);
-		void addNormal(Vector3d &_normal);
+		void addNode(Node &_node);
 		void addFacet(Facet &_facet);
 		void addMaterial(Material &_material);
 	public:
@@ -333,6 +392,8 @@ namespace EITS{
 		~SurfMesh(void);
 
 		localObject Tr;
+		IsView is_view;
+		IsEnable is_enable;
 
 		bool load(const char *filename);
 		bool save(const char *filename);
@@ -343,43 +404,24 @@ namespace EITS{
 		void deleteMaterial();
 		void clearMesh();
 		void clearView();
+		void clearEnable();
 
-		bool getIsTri(){return this->is_tri;}
 		bool getIsLoaded(){return this->is_loaded;}
-		bool getIsView(){return this->is_view;}
-		bool getIsAutoScale(){return this->is_auto_scale;}
-		bool getIsIdentity(){return this->is_identity;}
-		bool getIsSelected(){return this->is_selected;}
-		bool getIsViewNode(){return this->is_view_node;}
-		bool getIsViewLine(){return this->is_view_line;}
-		bool getIsViewFacet(){return this->is_view_facet;}
-		bool getIsDisplayList(){return this->is_display_list;}
-		bool getIsVertex_color_enabled(){return this->is_vertex_color_enabled;}
-		bool getIsViewLabel(){return this->is_view_label;}
-
-		int getNumNode() { return num_node; }
-		int getNumNormal() { return num_normal; }
-		int getNumFacet() { return num_facet; }
-		int getNumMaterial() { return num_material; }
-		int getNumLine() {return num_line;}
 
 		Vector3d getSize(){return size;}
 		double getScale(){return scale;}
 		Vector3d getCenter(){return center;}
-		Vector3d getVertex(int _index){return vertex[_index];}
-		Vector3d* getVertexPointer(){return vertex;}
-		Vector3d getNormal(int _index){return normal[_index];}
+		Node getNode(int _index){return node[_index];}
+		Node* getNodePointer(){return node;}
 		Line getLine(int _index){return this->line[_index];}
 		Vector3f getColor(int _index){return color[_index];}
-		void setVertex(int _index, Vector3d _vertex){vertex[_index]=_vertex;}
+		void setNode(int _index, Node _node){node[_index]=_node;}
 		Facet getFacet(int _index){return facet[_index];}
 		Facet* getFacetPointer(int _index){return &facet[_index];}
 		void setFacet(int _index, Facet _facet){facet[_index]=_facet;}
-		void setNormal(int _index, Vector3d _normal){normal[_index]=_normal;}
 		void setLine(int _index, Line _line){line[_index]=_line;}
 		Material getMaterial(int _index){return this->material[_index];}
 		Material* getMaterialPointerAt(int _index){return &this->material[_index];}
-		int getLabelIndex(int _index){return this->label_index[_index];}
 
 		std::ostream& getInfo(std::ostream &stream);
 		void render();
@@ -387,31 +429,25 @@ namespace EITS{
 		GLuint makeDisplayList(int _id);
 
 		void setColorAt(int _index, Vector3f _color){this->color[_index]=_color;}
-		void setLabelIndexAt(int _index, int _label){this->label_index[_index] = _label;}
 		void setNumNode(int _num_node){this->num_node=_num_node;}
-		void setNumNormal(int _num_normal){this->num_normal=_num_normal;}
+		int getNumNode() { return num_node; }
+		void setNumLine(int _num_line) { this->num_line = _num_line; }
+		int getNumLine() { return num_line; }
 		void setNumFacet(int _num_facet){this->num_facet=_num_facet;}
+		int getNumFacet() { return num_facet; }
 		void setNumMaterial(int _num_material){this->num_material=_num_material;}
-		void setNumLine(int _num_line){this->num_line=_num_line;}
-		void setIsView(bool _is_view){this->is_view=_is_view;}
-		void setIsViewLabel(bool _is_view_label){this->is_view_label=_is_view_label;}
-		void setIsViewLine(bool _is_view_line){this->is_view_line=_is_view_line;}
-		void setIsViewFacet(bool _is_view_facet){this->is_view_facet=_is_view_facet;}
-		void setIsViewNode(bool _is_view_node){this->is_view_node=_is_view_node;}
-		void setIsAutoScale(bool _is_auto_scale){this->is_auto_scale=_is_auto_scale;}
-		void setIsTri(bool _is_tri){this->is_tri=_is_tri;}
-		void setIsIdentity(bool _is_identity){this->is_identity=_is_identity;}
-		void setIsAlpha_blend(bool _is_alpha_blend){this->is_alpha_blend=_is_alpha_blend;}
-		void setIsVertex_color_enabled(bool _is_vertex_color_enabled){this->is_vertex_color_enabled=_is_vertex_color_enabled;}
-		void setIsDisplayList(bool _is_display_list){this->is_display_list=_is_display_list;}
+		int getNumMaterial() { return num_material; }
 
-		//描画座標に最も近い頂点番号を取得する
-		int getVertexIndexNear(Vector3d _pos);
-		int getFacetIndexNear(Vector3d _pos);
-		Vector3d getSelectedVertex(){return this->selected_vertex;}
-		void setSelectedVertex(int _index){this->selected_vertex=this->vertex[_index];}
-		void setSelectedIndex(int _selected_index){this->selected_index=_selected_index;}
-		void clearSelection();
+		Node* getNodeAt(int _index) { return &this->node[_index]; }
+		Line* getLineAt(int _index) { return &this->line[_index]; }
+		Facet* getFacetAt(int _index) { return &this->facet[_index]; }
+
+		//Selection interface
+		void setIsSelected(bool _is_selected) { this->is_selected = _is_selected; }
+		bool getIsSelected() { return this->is_selected; }
+		void selectAt(Vector3d _coord, int _type);
+		void selectWithin(Vector3d *_coord, int _type);
+		void clearSelection(int _type = SELECT_NONE);
 
 		void quadrize();
 		void centerize();
@@ -420,59 +456,54 @@ namespace EITS{
 	class VolumeMesh{
 
 	protected:
-		//読み込みのフラグ
+		//Flag for data load
 		bool is_loaded;
-		//ノード
+		//Node
 		Node *node;
-		//ノード数
+		//Number of nodes
 		int num_node;
-		//要素
+		//Element
 		Tetrahedra *elem;
-		//要素数
+		//Number of element
 		int num_elem;
-		//線
+		//Line
 		Line *line;
-		//線数
+		//Number of line
 		int num_line;
-		//面
+		//Facet
 		Facet *facet;
-		//面数
+		//Number of facet
 		int num_facet;
 
-		localObject Tr;
-
-		//物体のサイズを描画空間に合わせるかどうか
-		bool is_auto_scale;
-		//選択モード
-		int selection_mode;
-		//物体の中心
+		//Center of object
 		Vector3d center;
-		//サイズ
+		//Size of object
 		Vector3d size;
-		//スケール
+		//Scale of object
 		double scale;
 
-		bool is_view_line_extracted;
-		bool is_view_facet_extracted;
-
-		bool is_view_info;
-		bool is_view_node;
-		bool is_view_line;
-		bool is_view_facet;
-		bool is_view_smooth;
+		bool is_line_extracted;
+		bool is_facet_extracted;
+		bool is_selected;
 
 		void calCenter();
 		//Calculate the scale
 		void calScale();
 		//Calculate Transformation matrix
 		void calTransform();
-		//線の抽出
+		//Delete duplicated node
+		void calNode();
+		//Extract line from elements
 		void calLine();
-		//面の抽出
+		//Extract facet from elements
 		void calFacet();
 	public:
 		VolumeMesh();
 		~VolumeMesh();
+
+		IsEnable is_enable;
+		IsView is_view;
+		localObject Tr;
 
 		void newMesh();
 		void deleteMesh();
@@ -480,6 +511,7 @@ namespace EITS{
 		//Clear FEM data
 		void clear();
 		void clearView();
+		void clearEnable();
 		//Load FEM data
 		bool load(const char* _filename);
 		//Save FEM data
@@ -494,30 +526,34 @@ namespace EITS{
 		int makeDisplayList(int _id);
 
 		//Accessor
+		bool getIsLoaded() { return this->is_loaded; }
+		void setIsLoaded(bool _is_loaded) { this->is_loaded = _is_loaded; }
 		void setNumNode(int _num_node) { this->num_node = _num_node; }
 		int getNumNode(){return this->num_node;}
-		void setNumElem(int _num_elem) { this->num_elem = _num_elem; }
-		int getNumElem() { return this->num_elem; }
 		void setNumLine(int _num_line) { this->num_line = _num_line; }
 		int getNumLine() { return this->num_line; }
 		void setNumFacet(int _num_facet) { this->num_facet = _num_facet; }
 		int getNumFacet() { return this->num_facet; }
+		void setNumElem(int _num_elem) { this->num_elem = _num_elem; }
+		int getNumElem() { return this->num_elem; }
 		Vector3d getCenter(){return this->center;}
 		Vector3d getSize(){return this->size;}
-		bool getIsLoaded(){return this->is_loaded;}
-		Node* getNodeAt(int _elem){return (&this->node[_elem]);}
-		Tetrahedra* getElemAt(int _elem){return (&this->elem[_elem]);}
-		void setIsViewNode(bool _is_view_node){this->is_view_node=_is_view_node;}
-		void setIsViewFacet(bool _is_view_facet) { this->is_view_facet = _is_view_facet; }
-		void setIsViewLine(bool _is_view_line){this->is_view_line = _is_view_line;}
-		void setIsViewInfo(bool _is_view_info){this->is_view_info = _is_view_info;}
-		void setIsAutoScale(bool _is_auto_scale){ is_auto_scale=_is_auto_scale;}
-		void setIsLoaded(bool _is_loaded) { this->is_loaded = _is_loaded; }
+		Node* getNodeAt(int _index){return &this->node[_index];}
+		Line* getLineAt(int _index) { return &this->line[_index]; }
+		Facet* getFacetAt(int _index) { return &this->facet[_index]; }
+		Tetrahedra* getElemAt(int _index){return &this->elem[_index];}
+
+		//Selection interface
+		void setIsSelected(bool _is_selected) { this->is_selected = _is_selected; }
+		bool getIsSelected() { return this->is_selected; }
+		void selectAt(Vector3d _coord, int _type);
+		void selectWithin(Vector3d *_coord, int _type);
+		void clearSelection(int _type = SELECT_NONE);
 
 	};
 
 	bool isSharedLine(Line _new, Line *_old, int _num);
-	bool isSharedFacet(Facet _new, Facet *_old, int _num);
+	int isSharedFacet(Facet _new, Facet *_old, int _num);
 	bool convertTriangle2Quad(Facet *_tri1, Facet *_tri2);
 	//bool isCrossFacet(Facet *_facet1, Facet *_facet2, Vector3d *_Xend);
 }
